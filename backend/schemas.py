@@ -12,6 +12,8 @@ DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 Category = Literal["KOREAN", "CHINESE", "JAPANESE", "WESTERN", "SNACK", "ETC"]
 PriceRange = Literal["LOW", "MID", "HIGH"]
+# 선호도. 미지정은 None(null).
+Preference = Literal["LIKE", "SOSO", "DISLIKE"]
 
 
 def normalize_name(value: str) -> str:
@@ -29,6 +31,7 @@ class RestaurantCreate(BaseModel):
     category: Category = "ETC"
     price_range: PriceRange = "MID"
     memo: str = Field(default="", max_length=MEMO_MAX_LENGTH)
+    preference: Preference | None = None
 
     _normalize_name = field_validator("name")(normalize_name)
 
@@ -53,6 +56,8 @@ class RestaurantUpdate(BaseModel):
     category: Category | None = None
     price_range: PriceRange | None = None
     memo: str | None = Field(default=None, max_length=MEMO_MAX_LENGTH)
+    # preference는 null을 보내면 선호도를 지운다(다른 필드와 달리 null 허용).
+    preference: Preference | None = None
 
     # 기본값은 검증하지 않으므로, 이 검증은 값을 실제로 보냈을 때만 실행된다.
     @field_validator("name", "category", "price_range", "memo")
@@ -83,5 +88,6 @@ class Restaurant(BaseModel):
     category: Category
     price_range: PriceRange
     memo: str
+    preference: Preference | None
     last_visited_on: str | None
     created_at: str

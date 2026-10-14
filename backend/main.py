@@ -4,6 +4,7 @@ L01: 서버 동작 확인(/api/health).
 L02: 식당 등록·목록(이름 검색, 음식 종류·가격대 필터). 데이터는 MariaDB에 저장한다.
 L03: 식당 부분 수정·삭제·방문 기록(먹었어요).
 L04: 조건(종류·가격대 여러 개, 최근 N일 방문 제외)에 맞는 식당 하나를 무작위 추천.
+L09: 선호도(preference), 추천에서 별로 제외(exclude_disliked)·패스한 식당 제외(exclude_ids).
 """
 
 from collections.abc import Iterator
@@ -31,6 +32,8 @@ from backend.schemas import (
 app = FastAPI(title="Lunch Pick API")
 
 EXCLUDE_DAYS_MAX = 30
+# 패스한 식당 id는 화면에서 모아 보낸다. 요청이 지나치게 길어지지 않게 개수를 제한한다.
+EXCLUDE_IDS_MAX = 100
 
 
 @app.exception_handler(OperationalError)
@@ -59,6 +62,7 @@ def _to_restaurant(row: RestaurantRow) -> Restaurant:
         category=row.category,
         price_range=row.price_range,
         memo=row.memo,
+        preference=row.preference,
         last_visited_on=row.last_visited_on.isoformat() if row.last_visited_on else None,
         created_at=row.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
@@ -103,6 +107,7 @@ def create_restaurant(payload: RestaurantCreate, session: SessionDep) -> Restaur
         category=payload.category,
         price_range=payload.price_range,
         memo=payload.memo,
+        preference=payload.preference,
         created_at=_utc_now(),
     )
     session.add(row)
@@ -143,6 +148,8 @@ def recommend(
     price_range: Annotated[list[PriceRange] | None, Query()] = None,
     exclude_days: Annotated[int, Query(ge=0, le=EXCLUDE_DAYS_MAX)] = 0,
     today: str | None = None,
+    exclude_disliked: bool = False,
+    exclude_ids: Annotated[list[int] | None, Query(max_length=EXCLUDE_IDS_MAX)] = None,
 ) -> Restaurant:
     # today는 사용자 PC의 로컬 날짜다. 보냈으면 항상 검사한다.
     local_today = None
@@ -173,6 +180,12 @@ def recommend(
                 RestaurantRow.last_visited_on > local_today,
             )
         )
+    if exclude_disliked:
+        # 선호도 미지정(NULL)은 별로가 아니므로 남긴다.
+        query = query.where(or_(RestaurantRow.preference.is_(None), RestaurantRow.preference != "DISLIKE"))
+    if exclude_ids:
+        # 이번에 패스한 식당은 뺀다.
+        query = query.where(RestaurantRow.id.not_in(exclude_ids))
     row = session.scalars(query.order_by(func.rand()).limit(1)).first()
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No matching restaurant")

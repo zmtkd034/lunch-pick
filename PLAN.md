@@ -60,8 +60,12 @@
   - 남은 오류: 없음. 실제 별도 서버 분리와 Nginx 등 운영 웹 서버 구성은 PLAN 범위 밖이며 README에 방법만 적었다.
 ## 4장: 선호도와 패스(PRD R11~R13, 2026-10-14 추가)
 기존 데이터(사용자가 등록한 식당)는 지우지 않는다. 시험은 이름이 "zz시험"으로 시작하는 식당만 만들고 지운다.
-- [ ] L09: restaurants에 preference 열 추가(ALTER, 기존 행은 null), API에 preference 필드, 추천에 exclude_disliked·exclude_ids 조건. API-SPEC 갱신.
+- [x] L09: restaurants에 preference 열 추가(ALTER, 기존 행은 null), API에 preference 필드, 추천에 exclude_disliked·exclude_ids 조건. API-SPEC 갱신.
   확인: init_db 재실행 시 기존 행 유지, preference 등록·수정·null로 삭제, 잘못된 값 422, 별로 제외·패스 id 제외가 추천에 반영, 기존 API 계약 유지.
+  - 변경 파일: backend/schemas.py(Preference, 등록·수정·응답에 preference — 수정 시 null이면 삭제), backend/models.py(preference 열·CHECK), backend/init_db.py(preference 열 없으면 ALTER TABLE ADD COLUMN), backend/main.py(응답·등록에 preference, 추천 exclude_disliked·exclude_ids 최대 100개), API-SPEC.md
+  - 실행 명령: .venv 활성화 후 python -m backend.init_db → python -m uvicorn backend.main:app --host 127.0.0.1 --port 8100
+  - 확인 결과(2026-10-14, HTTP 요청 자동 확인 28개 통과 + L03 46개 회귀 통과, 임시 8101번에서 확인): 작업 전 사용자가 등록한 식당 8개를 scratchpad에 백업. init_db 1회차 preference 열 추가·2회차 그대로, SHOW CREATE TABLE로 열·CHECK 확인, 사용자 식당 8개 그대로(preference null). 등록 기본 null, LIKE·SOSO·DISLIKE 등록, 소문자·잘못된 값·숫자 422. PATCH preference만 변경·다른 필드 수정 시 유지·null로 삭제·잘못된 값 422, 다른 필드 null은 여전히 422, 방문 기록 후 유지, 목록 응답에 preference. 추천(시험 식당만 대상, 조건마다 60번): 기본은 별로 포함(기존 동작 유지), exclude_disliked=true면 별로만 제외·미지정 포함, exclude_ids 여러 개 제외, 두 조건 함께, 모두 제외 404, 없는 id 무시, 100개 허용, 문자·소수 id·잘못된 불리언·101개 422. 시험은 "zz시험" 식당과 L03 시험 식당만 만들고 삭제했으며, 시험 후 사용자 식당 8개가 시험 전과 같음을 확인.
+  - 남은 오류: 없음. 예전 시험(L02·L04)은 빈 DB를 전제로 해 사용자 데이터가 있는 지금은 실행하지 않았다(사용자 데이터 보호). 화면은 L10에서 반영한다.
 - [ ] L10: 화면에 선호도(등록·수정·목록·카드 표시), 추천의 "별로 빼기"(기본 켬), 결과 카드의 "패스" 버튼.
   확인: 선호도 저장·표시, 별로 빼기 동작, 패스한 식당이 다시 나오지 않음, 조건 변경 시 패스 초기화, 남은 식당 없을 때 안내, 375px 가로 스크롤 없음.
 ## 실행 기준

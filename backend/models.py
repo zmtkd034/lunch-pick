@@ -19,6 +19,7 @@ class RestaurantRow(Base):
         ),
         CheckConstraint("price_range IN ('LOW', 'MID', 'HIGH')", name="ck_restaurants_price_range"),
         CheckConstraint("CHAR_LENGTH(TRIM(name)) > 0", name="ck_restaurants_name_not_blank"),
+        CheckConstraint("preference IN ('LIKE', 'SOSO', 'DISLIKE')", name="ck_restaurants_preference"),
         {"mysql_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
 
@@ -27,6 +28,8 @@ class RestaurantRow(Base):
     category: Mapped[str] = mapped_column(String(10), nullable=False, default="ETC", server_default="ETC")
     price_range: Mapped[str] = mapped_column(String(10), nullable=False, default="MID", server_default="MID")
     memo: Mapped[str] = mapped_column(String(MEMO_MAX_LENGTH), nullable=False, default="", server_default="")
+    # 선호도(L09). 미지정은 NULL.
+    preference: Mapped[str | None] = mapped_column(String(10), nullable=True)
     last_visited_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     # UTC 기준 등록 시각. API 응답에서는 ISO 8601(끝에 Z)로 바꾼다.
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
