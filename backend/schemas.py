@@ -1,11 +1,14 @@
 """요청·응답 데이터 형식과 입력 검증 규칙(API-SPEC.md의 Restaurant)."""
 
+import re
+from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 NAME_MAX_LENGTH = 50
 MEMO_MAX_LENGTH = 500
+DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 Category = Literal["KOREAN", "CHINESE", "JAPANESE", "WESTERN", "SNACK", "ETC"]
 PriceRange = Literal["LOW", "MID", "HIGH"]
@@ -28,6 +31,50 @@ class RestaurantCreate(BaseModel):
     memo: str = Field(default="", max_length=MEMO_MAX_LENGTH)
 
     _normalize_name = field_validator("name")(normalize_name)
+
+
+def validate_date(value: str) -> str:
+    # 실제 존재하는 YYYY-MM-DD 날짜만 받는다(예: 2026-02-30 거절).
+    if not DATE_PATTERN.fullmatch(value):
+        raise ValueError("date must be YYYY-MM-DD")
+    try:
+        date.fromisoformat(value)
+    except ValueError:
+        raise ValueError("date must be a real calendar date") from None
+    return value
+
+
+class RestaurantUpdate(BaseModel):
+    """부분 수정. 보낸 필드만 바꾸고 보내지 않은 필드는 그대로 둔다(model_fields_set으로 구분)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = None
+    category: Category | None = None
+    price_range: PriceRange | None = None
+    memo: str | None = Field(default=None, max_length=MEMO_MAX_LENGTH)
+
+    # 기본값은 검증하지 않으므로, 이 검증은 값을 실제로 보냈을 때만 실행된다.
+    @field_validator("name", "category", "price_range", "memo")
+    @classmethod
+    def reject_null(cls, value, info):
+        if value is None:
+            raise ValueError(f"{info.field_name} cannot be null")
+        return value
+
+    @field_validator("name")
+    @classmethod
+    def check_name(cls, value: str) -> str:
+        return normalize_name(value)
+
+
+class VisitRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # 사용자 PC의 로컬 날짜를 화면이 보낸다.
+    visited_on: str
+
+    _validate_visited_on = field_validator("visited_on")(validate_date)
 
 
 class Restaurant(BaseModel):

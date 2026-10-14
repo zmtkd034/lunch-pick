@@ -2,13 +2,14 @@
 
 L01: 서버 동작 확인(/api/health).
 L02: 식당 등록·목록(이름 검색, 음식 종류·가격대 필터). 데이터는 MariaDB에 저장한다.
+L03: 식당 부분 수정·삭제·방문 기록(먹었어요).
 """
 
 from collections.abc import Iterator
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.exc import OperationalError
@@ -16,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
 from backend.models import RestaurantRow
-from backend.schemas import Category, PriceRange, Restaurant, RestaurantCreate
+from backend.schemas import Category, PriceRange, Restaurant, RestaurantCreate, RestaurantUpdate, VisitRequest
 
 app = FastAPI(title="Lunch Pick API")
 
@@ -50,6 +51,13 @@ def _to_restaurant(row: RestaurantRow) -> Restaurant:
         last_visited_on=row.last_visited_on.isoformat() if row.last_visited_on else None,
         created_at=row.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
     )
+
+
+def _get_row(session: Session, restaurant_id: int) -> RestaurantRow:
+    row = session.get(RestaurantRow, restaurant_id)
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
+    return row
 
 
 @app.get("/api/health")
@@ -87,5 +95,31 @@ def create_restaurant(payload: RestaurantCreate, session: SessionDep) -> Restaur
         created_at=_utc_now(),
     )
     session.add(row)
+    session.commit()
+    return _to_restaurant(row)
+
+
+@app.patch("/api/restaurants/{restaurant_id}")
+def update_restaurant(restaurant_id: int, payload: RestaurantUpdate, session: SessionDep) -> Restaurant:
+    row = _get_row(session, restaurant_id)
+    # 보낸 필드만 바꾸고 보내지 않은 필드는 그대로 둔다.
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(row, field, value)
+    session.commit()
+    return _to_restaurant(row)
+
+
+@app.delete("/api/restaurants/{restaurant_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_restaurant(restaurant_id: int, session: SessionDep) -> Response:
+    session.delete(_get_row(session, restaurant_id))
+    session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.post("/api/restaurants/{restaurant_id}/visit")
+def visit_restaurant(restaurant_id: int, payload: VisitRequest, session: SessionDep) -> Restaurant:
+    # 보낸 날짜를 마지막 방문일로 저장한다.
+    row = _get_row(session, restaurant_id)
+    row.last_visited_on = date.fromisoformat(payload.visited_on)
     session.commit()
     return _to_restaurant(row)
