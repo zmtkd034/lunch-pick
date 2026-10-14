@@ -1,6 +1,6 @@
 # 오늘 뭐 먹지? API 명세
 
-PRD의 요구사항(R01~R16)을 API로 옮긴 계약이다. 구현 순서는 PLAN을 따른다.
+PRD의 요구사항(R01~R21)을 API로 옮긴 계약이다. 구현 순서는 PLAN을 따른다.
 
 | 엔드포인트 | 구현 작업 |
 |---|---|
@@ -10,12 +10,15 @@ PRD의 요구사항(R01~R16)을 API로 옮긴 계약이다. 구현 순서는 PLA
 | `GET /api/recommendation` | L04 |
 | 선호도(`preference`), 추천의 `exclude_disliked`·`exclude_ids` | L09 |
 | `GET /api/menu-recommendation` | L11 |
+| `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` | L25 |
+| 식당 API의 로그인 필수·사용자별 분리(`401`) | L26 |
 
 ## 공통
 
 - 기본 주소(개발): `http://127.0.0.1:8100`. 화면 개발 서버(5173)는 `/api` 요청을 이 주소로 전달한다(L05).
 - 모든 경로는 `/api`로 시작한다. 요청·응답 본문은 JSON(UTF-8)이다.
-- 인증은 없다(로그인 없는 개인용 첫 버전).
+- 인증(L25·L26): `/api/health`, `/api/auth/signup`·`login`·`logout`, `/api/menu-recommendation`을 뺀 모든 API는 로그인이 필요하다. 로그인하지 않았으면 `401` `{"detail": "Not authenticated"}`이며, 입력 검증보다 로그인 확인을 먼저 한다(본문이 틀려도 `401`).
+- 식당은 로그인한 사용자 본인 것만 조회·수정·삭제·방문 기록·추천한다. 다른 사용자의 식당 `id`는 없는 식당과 같은 `404`다.
 - 입력값 검증은 서버에서도 한다. 화면 검증만 믿지 않는다.
 - 데이터는 MariaDB에 저장한다. API를 재시작해도 유지된다.
 
@@ -46,17 +49,61 @@ PRD의 요구사항(R01~R16)을 API로 옮긴 계약이다. 구현 순서는 PLA
 ```
 
 - `id`, `created_at`, `last_visited_on`과 정의되지 않은 필드를 등록·수정 요청으로 보내면 422로 거절한다.
+- 식당의 주인(`user_id`)은 서버가 로그인한 사용자로 정한다. 응답에는 넣지 않고, 요청으로 보내면 정의되지 않은 필드로 보고 422다.
 
 ## 오류 응답
 
 | 상태 코드 | 상황 |
 |---|---|
+| `401 Unauthorized` | 로그인하지 않았거나 세션이 만료·로그아웃됨(`{"detail": "Not authenticated"}`), 로그인 실패(`{"detail": "Invalid username or password"}`) |
 | `404 Not Found` | 해당 `id`의 식당이 없음(`{"detail": "Restaurant not found"}`), 추천 조건에 맞는 식당이 없음(`{"detail": "No matching restaurant"}`), 조건에 맞는 메뉴가 없음(`{"detail": "No matching menu"}`) |
+| `409 Conflict` | 회원가입 시 이미 있는 아이디(`{"detail": "Username already exists"}`) |
 | `422 Unprocessable Entity` | 입력 규칙 위반(빈 이름, 51자 이름, 501자 메모, 잘못된 종류·가격대·날짜, 정의되지 않은 필드 등). `detail`은 위반 항목 목록(FastAPI 기본 형식) |
 | `500 Internal Server Error` | 연결 외의 DB 오류(예: 테이블 열 없음, 잠금 시간 초과). `{"detail": "Internal server error"}`. 원인은 서버 로그에만 남긴다(L21). |
 | `503 Service Unavailable` | DB에 연결할 수 없음(서버 꺼짐·연결 끊김·접속 정보 오류). `{"detail": "Database unavailable"}`, 접속 정보 등 내부 오류는 보여 주지 않고 원인은 서버 로그에 남긴다. |
 
+`/api/auth/` API의 422 항목에는 보낸 값(`input`)을 넣지 않는다(비밀번호가 응답에 다시 나오지 않게).
+
+## 데이터: User
+
+| 필드 | 타입 | 규칙 |
+|---|---|---|
+| `id` | integer | 서버가 발급하는 고유 번호 |
+| `username` | string | 영문 소문자·숫자 4~20자(`^[a-z0-9]{4,20}$`). 앞뒤 공백 제거·소문자 변환을 하지 않는다. 중복 불가. |
+| `created_at` | string | 가입 시각(ISO 8601, UTC) |
+
+- 비밀번호(`password`)는 요청으로만 받는다. 8~64자, 문자 종류 제한 없음, 앞뒤 공백도 비밀번호로 본다. DB에는 사용자별 salt를 쓴 scrypt 해시만 저장하고 응답·로그에 넣지 않는다.
+
+## 인증(세션 쿠키)
+
+- 로그인에 성공하면 쿠키 `lunch_pick_session`을 보낸다. 같은 컴퓨터의 Task Flow(쿠키 `task_flow_session`)와 섞이지 않게 이름을 다르게 한다.
+  - 속성: `HttpOnly`, `SameSite=Lax`, `Path=/api`, `Max-Age=604800`(7일). 개발·학습용 HTTP 주소에서 쓰므로 `Secure`는 붙이지 않는다.
+- 세션 값은 무작위 값이며 DB에는 해시·사용자·만료 시각만 저장한다. API를 재시작해도 로그인이 유지되고, 7일이 지나거나 로그아웃하면 그 세션은 `401`이다.
+
 ## 엔드포인트
+
+### `POST /api/auth/signup`
+
+회원가입. 가입만 하고 로그인은 하지 않는다. 본문 `{"username": "...", "password": "..."}`.
+
+- `201 Created`: User. 규칙 위반·필드 누락·정의되지 않은 필드 `422`, 이미 있는 아이디 `409`.
+
+### `POST /api/auth/login`
+
+로그인. 본문은 회원가입과 같다.
+
+- `200 OK`: User와 `Set-Cookie: lunch_pick_session=...`.
+- 없는 아이디·틀린 비밀번호·규칙에 맞지 않는 값은 모두 같은 `401` `{"detail": "Invalid username or password"}`. 필드 누락·문자열이 아닌 값·정의되지 않은 필드는 `422`.
+- 이미 로그인한 쿠키가 있으면 그 세션은 지우고 새로 만든다.
+
+### `POST /api/auth/logout`
+
+로그아웃. 현재 쿠키의 세션을 지우고 쿠키를 만료시킨다. 항상 `204 No Content`.
+
+### `GET /api/auth/me`
+
+현재 로그인한 사용자. `200 OK`: User, 로그인하지 않았으면 `401`.
+
 
 ### `GET /api/health`
 
@@ -137,6 +184,7 @@ PRD의 요구사항(R01~R16)을 API로 옮긴 계약이다. 구현 순서는 PLA
 ### `GET /api/menu-recommendation`
 
 기본 메뉴 목록(음식 종류별 10개, 총 60개)에서 메뉴 하나를 무작위로 추천한다. 식당 데이터와 DB는 쓰지 않는다.
+로그인 없이도 쓸 수 있다(개인 데이터가 없음).
 
 쿼리 파라미터:
 
