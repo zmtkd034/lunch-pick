@@ -20,5 +20,7 @@ export default defineConfig({
     port: 4173,
     strictPort: true,
     proxy: { '/api': API_TARGET },
+    // ngrok으로 공유할 때 들어오는 주소만 허용한다(그 밖의 낯선 주소는 Vite 기본대로 막음).
+    allowedHosts: ['.ngrok-free.app', '.ngrok-free.dev'],
   },
 })

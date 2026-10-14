@@ -177,6 +177,14 @@ Task Flow(같은 컴퓨터의 다른 프로젝트) 6장과 같은 방식을 쓰�
   확인: 비로그인 시 로그인 화면, 가입·로그인·로그아웃, 내 식당만 표시, 세션 만료 시 로그인 화면, 기존 화면 기능 회귀, 375px 가로 스크롤 없음.
 - [ ] L28: README 실행·준비 설명 갱신, 빌드본(4173)에서 전체 확인.
   확인: README 절차와 실제가 맞음, 빌드본에서 가입·로그인·식당·추천·메뉴 뽑기 동작.
+- 중단(2026-10-14, 사용자 요청): L26은 코드 수정 중 멈췄고 수정은 되돌렸다(git restore). L26~L28은 미완료로 남긴다. L25까지의 회원가입·로그인 API는 코드에 있지만 식당 API는 아직 로그인 없이 동작한다.
+## 추가 작업
+- [x] ngrok 공유: 빌드본(4173)이 ngrok 주소를 막지 않게 preview.allowedHosts에 ngrok 도메인 추가.
+  확인: ngrok 주소(Host)로 요청 시 200, 다른 낯선 주소는 계속 403, 로컬 주소 200.
+  - 변경 파일: frontend/vite.config.js(preview.allowedHosts: .ngrok-free.app·.ngrok-free.dev)
+  - 실행 명령: cd frontend && npm run build && npm run preview → (사용자) ngrok http 4173
+  - 확인 결과(2026-10-14): 고치기 전 ngrok 주소 Host로 요청 시 403 "Blocked request". 고친 뒤 빌드·preview 다시 시작: Host *.ngrok-free.app·*.ngrok-free.dev 200, 낯선 주소(evil.example.com) 403 유지, 127.0.0.1:4173 200, ngrok Host로 /api/health 200. 실제 ngrok 터널 연결은 사용자가 실행한다.
+  - 남은 오류: 식당 API에 아직 로그인이 없어(L26 미완료) 주소를 아는 사람은 식당을 보고 바꿀 수 있다.
 ## 실행 기준
 작업마다 실제 존재하는 파일을 확인한 뒤 실행 명령을 기록한다.
 ## 기록
