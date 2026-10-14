@@ -743,136 +743,244 @@ textarea:disabled {
   }
 }
 
-/* L15: 식당 테마 — 식탁보(빨강·흰 체크) 띠, 나무 간판 제목, 메뉴판 종이 영역, 체크무늬 카드 뒷면 */
-body::before {
+/* L16: 하늘·구름·해 배경, 줄무늬 차양 아래 둥근 간판, 주황 땅(참고 그림의 분위기만 반영) */
+body {
+  background:
+    radial-gradient(circle at 88% 70px, #fff6c8 0 26px, var(--mustard) 27px 34px, rgba(247, 197, 72, 0.35) 35px 52px, transparent 53px),
+    radial-gradient(ellipse 70px 22px at 10% 70px, #fff 98%, transparent),
+    radial-gradient(ellipse 46px 26px at calc(10% + 30px) 56px, #fff 98%, transparent),
+    radial-gradient(ellipse 60px 20px at 7% 300px, rgba(255, 255, 255, 0.9) 98%, transparent),
+    radial-gradient(ellipse 40px 22px at calc(7% + 24px) 288px, rgba(255, 255, 255, 0.9) 98%, transparent),
+    radial-gradient(ellipse 64px 20px at 93% 240px, rgba(255, 255, 255, 0.85) 98%, transparent),
+    linear-gradient(180deg, var(--sky) 0, var(--bg) 420px, #e8f6f1 100%);
+  background-repeat: no-repeat;
+}
+
+/* 페이지 맨 아래 주황 땅과 나무 덤불 */
+body::after {
   content: "";
   display: block;
-  height: 26px;
-  background: repeating-conic-gradient(var(--accent) 0 25%, #fff 0 50%) 0 0 / 26px 26px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  height: 64px;
+  margin-top: 8px;
+  background:
+    radial-gradient(circle at 8% 18px, var(--leaf) 0 22px, transparent 23px),
+    radial-gradient(circle at 15% 26px, #74b06a 0 16px, transparent 17px),
+    radial-gradient(circle at 90% 20px, var(--leaf) 0 20px, transparent 21px),
+    radial-gradient(circle at 84% 28px, #74b06a 0 14px, transparent 15px),
+    linear-gradient(180deg, transparent 0 30px, var(--accent) 30px);
 }
 
 .container {
-  margin-top: 24px;
+  margin-top: 28px;
 }
 
 .shop-sign {
-  margin: 0 0 24px;
-  padding: 14px 16px 16px;
-  border: 3px solid var(--wood-dark);
-  border-radius: 12px;
-  background:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 2px, transparent 2px 9px),
-    linear-gradient(180deg, #7b5446, var(--wood) 55%, #5d4037);
-  box-shadow: 0 6px 0 var(--wood-dark), 0 10px 18px rgba(62, 39, 35, 0.25);
+  margin: 0 0 22px;
+}
+
+.sign-label {
+  position: relative;
+  z-index: 1;
+  padding: 14px 16px 12px;
+  border: 4px solid var(--accent);
+  border-radius: 30px;
+  background: var(--paper);
+  box-shadow: 0 5px 0 var(--accent-dark);
   text-align: center;
 }
 
 .shop-sign h1 {
   margin: 0;
-  color: #fff4dc;
-  font-family: "Nanum Myeongjo", "Batang", "Noto Serif KR", serif;
-  font-size: clamp(28px, 7vw, 40px);
-  letter-spacing: 0.04em;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  color: var(--wood);
+  font-family: var(--title-font);
+  font-size: clamp(32px, 9vw, 50px);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+
+/* 개구쟁이 느낌: 글자마다 번갈아 기울이고 차례로 통통 튄다. */
+.title-char {
+  display: inline-block;
+  transform: rotate(-6deg);
+  animation: title-bounce 2.6s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.12s);
+}
+
+.title-char:nth-child(even) {
+  transform: rotate(6deg);
+  color: var(--accent);
+}
+
+@keyframes title-bounce {
+  0%,
+  60%,
+  100% {
+    translate: 0 0;
+  }
+  30% {
+    translate: 0 -7px;
+  }
 }
 
 .shop-sign-sub {
-  margin: 0 0 4px;
-  color: var(--mustard);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.3em;
+  margin: 2px 0 0;
+  color: var(--leaf);
+  font-family: var(--title-font);
+  font-size: 16px;
+  letter-spacing: 0.1em;
+}
+
+/* 간판 아래 주황·흰 줄무늬 차양(아래쪽은 물결 모양) */
+.awning {
+  height: 34px;
+  margin: -6px 18px 0;
+  border-radius: 0 0 10px 10px;
+  background: repeating-linear-gradient(90deg, var(--accent) 0 26px, #fff 26px 52px);
+  border-radius: 0;
+  /* 위쪽은 곧게, 아래쪽은 줄무늬마다 둥근 끝이 늘어진다(반원 26px = 줄무늬 한 칸). */
+  -webkit-mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - 13px) no-repeat,
+    radial-gradient(13px at 50% 0, #000 98%, transparent) bottom / 26px 13px repeat-x;
+  mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - 13px) no-repeat,
+    radial-gradient(13px at 50% 0, #000 98%, transparent) bottom / 26px 13px repeat-x;
+  filter: drop-shadow(0 3px 0 rgba(207, 95, 38, 0.35));
 }
 
 .menu-board {
   margin-bottom: 24px;
-  padding: 16px 16px 12px;
-  border: 2px solid var(--wood);
-  border-radius: 12px;
+  padding: 18px 16px 12px;
+  border: 3px solid #fff;
+  border-radius: 22px;
   background: var(--paper);
-  box-shadow:
-    inset 0 0 0 5px var(--paper),
-    inset 0 0 0 6px var(--line),
-    0 3px 10px rgba(62, 39, 35, 0.12);
+  box-shadow: 0 6px 0 rgba(122, 74, 42, 0.12), 0 10px 22px rgba(90, 58, 38, 0.1);
 }
 
+/* 영역 제목은 주황 이름표 */
 .menu-board .section-title {
-  margin-top: 0;
-  border-bottom: 1px dashed var(--line);
-  color: var(--wood);
-  font-family: "Nanum Myeongjo", "Batang", "Noto Serif KR", serif;
-  font-size: 20px;
-  text-align: center;
+  display: table;
+  margin: -32px auto 14px;
+  padding: 5px 18px;
+  border: 3px solid #fff;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--title-font);
+  font-size: 19px;
+  font-weight: 400;
 }
 
-.menu-board .section-title::before,
-.menu-board .section-title::after {
-  content: "~";
-  margin: 0 8px;
-  color: var(--mustard);
+.menu-board + .menu-board,
+.recommend {
+  margin-top: 30px;
 }
 
 .restaurant-item {
   border-color: var(--line);
+  border-radius: 14px;
   background: #fff;
 }
 
+.draw-button,
+.restaurant-form button[type="submit"] {
+  border-radius: 999px;
+  font-family: var(--title-font);
+  font-weight: 400;
+}
+
+.draw-button {
+  box-shadow: 0 4px 0 var(--accent-dark);
+}
+
+.draw-button:active:not(:disabled) {
+  box-shadow: none;
+  transform: translateY(4px);
+}
+
+.mode-tabs {
+  border-width: 2px;
+  border-radius: 999px;
+}
+
+.mode-tab:first-child {
+  border-radius: 999px 0 0 999px;
+}
+
+.mode-tab:last-child {
+  border-radius: 0 999px 999px 0;
+}
+
+.mode-tab {
+  font-family: var(--title-font);
+  font-size: 15px;
+}
+
+/* 카드 뒷면: 차양 줄무늬 위에 크림색 접시 */
 .card-back {
-  background: repeating-conic-gradient(var(--accent) 0 25%, #fff 0 50%) 0 0 / 32px 32px;
+  background: repeating-linear-gradient(90deg, var(--accent) 0 24px, #fff 24px 48px);
   color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .card-back .card-mark {
   display: grid;
   place-items: center;
-  width: 72px;
-  height: 72px;
-  border: 3px solid var(--wood);
+  width: 76px;
+  height: 76px;
+  border: 4px solid var(--accent);
   border-radius: 50%;
   background: var(--paper);
   color: var(--accent);
-  text-shadow: none;
+  font-family: var(--title-font);
 }
 
 .card-back span:last-child {
-  padding: 2px 10px;
-  border-radius: 6px;
-  background: rgba(62, 39, 35, 0.75);
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--wood);
+  font-family: var(--title-font);
 }
 
 .card-front {
+  border: 3px solid var(--accent);
   background: var(--paper);
-  border-color: var(--wood);
+}
+
+.card-label,
+.card-name {
+  font-family: var(--title-font);
+  font-weight: 400;
 }
 
 .card-label {
   color: var(--accent);
-}
-
-.draw-button {
-  box-shadow: 0 3px 0 var(--accent-dark);
-}
-
-.draw-button:active:not(:disabled) {
-  box-shadow: none;
-  transform: translateY(3px);
+  font-size: 15px;
 }
 
 .badge.visited {
-  background: #f5ecd9;
-  color: var(--wood);
+  background: #e6f4e2;
+  color: #4f8a45;
 }
 
 .same-category {
   border-color: var(--line);
+  border-radius: 14px;
   background: #fff;
 }
 
 @media (max-width: 480px) {
   .menu-board {
-    padding: 14px 12px 10px;
+    padding: 18px 12px 10px;
+  }
+
+  .awning {
+    margin: -6px 10px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-char {
+    animation: none;
   }
 }
 

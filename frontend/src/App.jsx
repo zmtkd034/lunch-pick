@@ -10,6 +10,9 @@ import './App.css'
 
 // L05: 식당 목록과 등록. L06: 검색·필터, 수정·삭제, 먹었어요. L07: 카드 뽑기 추천. L12: 메뉴 뽑기. L13: 버튼 포크 효과.
 // 데이터는 백엔드 API(/api/restaurants)로만 주고받는다. 검색·필터는 받아 온 목록으로 화면에서 계산한다.
+// 맨 위 간판 제목(L16).
+const TITLE = '오늘의 메뉴는~?'
+
 export default function App() {
   const [restaurants, setRestaurants] = useState([])
   // "loading" | "ready" | "error". 목록을 불러오지 못하면 빈 목록 안내 대신 오류를 보여 준다.
@@ -122,8 +125,19 @@ export default function App() {
   return (
     <main className="container">
       <header className="shop-sign">
-        <p className="shop-sign-sub" aria-hidden="true">오늘의 식당</p>
-        <h1>오늘 뭐 먹지?</h1>
+        <div className="sign-label">
+          {/* 글자마다 살짝 기울여 통통 튀게 한다. 화면 읽기 프로그램에는 제목 전체를 한 번에 읽힌다. */}
+          <h1 aria-label={TITLE}>
+            {[...TITLE].map((char, index) => (
+              <span key={index} className="title-char" style={{ '--i': index }} aria-hidden="true">
+                {/* 글자 상자 안의 빈칸은 사라지므로 줄바꿈 없는 빈칸으로 바꾼다. */}
+                {char === ' ' ? '\u00A0' : char}
+              </span>
+            ))}
+          </h1>
+          <p className="shop-sign-sub" aria-hidden="true">오늘도 맛있게!</p>
+        </div>
+        <div className="awning" aria-hidden="true" />
       </header>
 
       {apiError && (
