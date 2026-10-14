@@ -7,8 +7,9 @@ import RestaurantEditForm from './RestaurantEditForm.jsx'
 export default function RestaurantList({ restaurants, visibleRestaurants, loadState, onUpdate, onDelete, onVisit }) {
   // 수정 중인 식당 id. 한 번에 하나만 수정한다.
   const [editingId, setEditingId] = useState(null)
-  // 요청 중인 식당 id. 요청이 끝날 때까지 그 항목의 버튼을 막는다.
+  // 요청 중인 식당 id. 요청이 끝날 때까지 모든 항목의 버튼을 막는다(요청은 한 번에 하나, L20).
   const [busyId, setBusyId] = useState(null)
+  const anyBusy = busyId !== null
 
   if (loadState === 'loading') {
     return <p className="empty-message">식당 목록을 불러오는 중입니다…</p>
@@ -24,7 +25,7 @@ export default function RestaurantList({ restaurants, visibleRestaurants, loadSt
   }
 
   async function runAction(id, action) {
-    if (busyId !== null) {
+    if (anyBusy) {
       return
     }
     setBusyId(id)
@@ -36,6 +37,10 @@ export default function RestaurantList({ restaurants, visibleRestaurants, loadSt
   }
 
   function handleDelete(restaurant) {
+    // 다른 요청 중이면 확인 창을 띄우지 않는다(확인해도 삭제되지 않는 일이 없게).
+    if (anyBusy) {
+      return
+    }
     if (!window.confirm(`"${restaurant.name}" 식당을 삭제할까요?`)) {
       return
     }
@@ -50,7 +55,8 @@ export default function RestaurantList({ restaurants, visibleRestaurants, loadSt
   return (
     <ul className="restaurant-list">
       {visibleRestaurants.map((restaurant) => {
-        const busy = busyId === restaurant.id
+        // 이 항목이든 다른 항목이든 요청 중이면 버튼을 막는다.
+        const busy = anyBusy
         return (
           <li key={restaurant.id} className="restaurant-item" data-id={restaurant.id}>
             {editingId === restaurant.id ? (

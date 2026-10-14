@@ -336,12 +336,18 @@ textarea:disabled {
   outline-offset: 2px;
 }
 
+/* 조건은 왼쪽부터 차례로, 뽑기 버튼은 화면 폭과 관계없이 항상 오른쪽 끝(L18·L20).
+   줄이 넘어가 버튼이 혼자 남아도 왼쪽에 붙지 않고, 조건 사이 간격도 폭마다 달라지지 않는다. */
 .recommend-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 10px;
+}
+
+.recommend-row .draw-button {
+  margin-left: auto;
 }
 
 .exclude-days {
@@ -1152,9 +1158,4 @@ body::after {
   .card-mini {
     display: none;
   }
-}
-
-/* L18: 뽑기 버튼은 화면 폭과 관계없이 항상 오른쪽 끝. 줄이 넘어가 혼자 남아도 왼쪽에 붙지 않는다. */
-.recommend-row .draw-button {
-  margin-left: auto;
 }

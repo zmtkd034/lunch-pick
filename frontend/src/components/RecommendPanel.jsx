@@ -90,7 +90,8 @@ export default function RecommendPanel({ restaurants, onPicked, onVisit }) {
   }
 
   async function visit() {
-    if (visiting || picked === null) {
+    // 카드를 섞는 중에는 화면에서 사라진 이전 결과에 방문 기록을 남기지 않는다(L20).
+    if (visiting || picked === null || drawingRef.current) {
       return
     }
     setVisiting(true)
@@ -198,7 +199,12 @@ export default function RecommendPanel({ restaurants, onPicked, onVisit }) {
         >
           <div className="card-inner">
             <CardBack hidden={shownPhase === 'revealed'} />
-            <div className="card-face card-front" aria-hidden={shownPhase !== 'revealed'}>
+            {/* 뒤집혀 숨은 앞면(섞는 중·결과 없음)은 inert로 눌리지도 초점이 가지도 않게 한다(L20). */}
+            <div
+              className="card-face card-front"
+              aria-hidden={shownPhase !== 'revealed'}
+              inert={shownPhase !== 'revealed'}
+            >
               {picked && (
                 <>
                   <span className="card-label">오늘은 여기!</span>

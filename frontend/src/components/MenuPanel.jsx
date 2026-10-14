@@ -109,7 +109,8 @@ export default function MenuPanel({ restaurants }) {
         >
           <div className="card-inner">
             <CardBack hidden={phase === 'revealed'} />
-            <div className="card-face card-front" aria-hidden={phase !== 'revealed'}>
+            {/* 뒤집혀 숨은 앞면(섞는 중·결과 없음)은 inert로 눌리지도 초점이 가지도 않게 한다(L20). */}
+            <div className="card-face card-front" aria-hidden={phase !== 'revealed'} inert={phase !== 'revealed'}>
               {menu && (
                 <>
                   <span className="card-label">오늘의 메뉴!</span>
