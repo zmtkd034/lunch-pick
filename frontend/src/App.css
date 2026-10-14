@@ -25,10 +25,10 @@ h1 {
   padding: 10px 12px;
   font: inherit;
   font-size: 16px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--input-border);
   border-radius: 6px;
   background: #fff;
-  color: #222;
+  color: var(--ink);
 }
 
 #restaurant-name {
@@ -50,7 +50,7 @@ h1 {
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  color: #555;
+  color: var(--muted);
 }
 
 .form-options select {
@@ -63,13 +63,13 @@ h1 {
   font-size: 16px;
   border: none;
   border-radius: 6px;
-  background: #e8590c;
+  background: var(--accent);
   color: #fff;
   cursor: pointer;
 }
 
 .restaurant-form button:hover {
-  background: #c94d0a;
+  background: var(--accent-dark);
 }
 
 button:disabled,
@@ -114,12 +114,12 @@ textarea:disabled {
 .section-title {
   margin: 8px 0 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--line);
   font-size: 18px;
 }
 
 .empty-message {
-  color: #777;
+  color: var(--muted-light);
 }
 
 .restaurant-list {
@@ -131,7 +131,7 @@ textarea:disabled {
 .restaurant-item {
   padding: 12px;
   margin-bottom: 8px;
-  border: 1px solid #e3e1dc;
+  border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
 }
@@ -173,7 +173,7 @@ textarea:disabled {
 
 .restaurant-memo {
   margin: 8px 0 0;
-  color: #555;
+  color: var(--muted);
   font-size: 14px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -195,10 +195,10 @@ textarea:disabled {
   padding: 8px 10px;
   font: inherit;
   font-size: 15px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--input-border);
   border-radius: 6px;
   background: #fff;
-  color: #222;
+  color: var(--ink);
 }
 
 .filters input {
@@ -229,7 +229,7 @@ textarea:disabled {
 .edit-actions button {
   padding: 6px 10px;
   font-size: 14px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--input-border);
   border-radius: 6px;
   background: #fff;
   color: #333;
@@ -237,8 +237,8 @@ textarea:disabled {
 }
 
 .restaurant-actions button[data-action="visit"] {
-  border-color: #e8590c;
-  color: #e8590c;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .restaurant-actions button[data-action="delete"] {
@@ -269,7 +269,7 @@ textarea:disabled {
 
 .edit-actions button[type="submit"] {
   border: none;
-  background: #e8590c;
+  background: var(--accent);
   color: #fff;
 }
 
@@ -300,7 +300,7 @@ textarea:disabled {
 .choice-group legend {
   margin-bottom: 6px;
   font-size: 14px;
-  color: #555;
+  color: var(--muted);
 }
 
 .chip {
@@ -316,7 +316,7 @@ textarea:disabled {
 .chip span {
   display: inline-block;
   padding: 6px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--input-border);
   border-radius: 999px;
   background: #fff;
   font-size: 14px;
@@ -325,14 +325,14 @@ textarea:disabled {
 }
 
 .chip input:checked + span {
-  border-color: #e8590c;
-  background: #fff1e8;
-  color: #c94d0a;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-dark);
   font-weight: 600;
 }
 
 .chip input:focus-visible + span {
-  outline: 2px solid #e8590c;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -350,14 +350,14 @@ textarea:disabled {
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  color: #555;
+  color: var(--muted);
 }
 
 .exclude-days input {
   width: 64px;
   padding: 6px 8px;
   font: inherit;
-  border: 1px solid #ccc;
+  border: 1px solid var(--input-border);
   border-radius: 6px;
 }
 
@@ -367,13 +367,13 @@ textarea:disabled {
   font-weight: 600;
   border: none;
   border-radius: 8px;
-  background: #e8590c;
+  background: var(--accent);
   color: #fff;
   cursor: pointer;
 }
 
 .draw-button:hover:not(:disabled) {
-  background: #c94d0a;
+  background: var(--accent-dark);
 }
 
 .card-stage {
@@ -433,7 +433,7 @@ textarea:disabled {
 }
 
 .card-back {
-  background: repeating-linear-gradient(45deg, #e8590c, #e8590c 12px, #f08c4d 12px, #f08c4d 24px);
+  background: repeating-linear-gradient(45deg, var(--accent), var(--accent) 12px, #f08c4d 12px, #f08c4d 24px);
   color: #fff;
   font-weight: 600;
 }
@@ -446,11 +446,11 @@ textarea:disabled {
 .card-front {
   transform: rotateY(180deg);
   background: #fff;
-  border: 2px solid #e8590c;
+  border: 2px solid var(--accent);
 }
 
 .card-label {
-  color: #e8590c;
+  color: var(--accent);
   font-size: 13px;
   font-weight: 600;
 }
@@ -469,7 +469,7 @@ textarea:disabled {
   max-width: 100%;
   margin: 0;
   overflow: hidden;
-  color: #555;
+  color: var(--muted);
   font-size: 13px;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -478,10 +478,10 @@ textarea:disabled {
 .card-visit {
   padding: 6px 14px;
   font-size: 14px;
-  border: 1px solid #e8590c;
+  border: 1px solid var(--accent);
   border-radius: 6px;
   background: #fff;
-  color: #e8590c;
+  color: var(--accent);
   cursor: pointer;
 }
 
@@ -489,7 +489,7 @@ textarea:disabled {
   min-height: 1.4em;
   margin: 10px 0 0;
   text-align: center;
-  color: #555;
+  color: var(--muted);
   font-size: 14px;
 }
 
@@ -524,7 +524,7 @@ textarea:disabled {
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  color: #555;
+  color: var(--muted);
 }
 
 .card-actions {
@@ -549,7 +549,7 @@ textarea:disabled {
   justify-content: center;
   gap: 8px;
   margin: 4px 0 0;
-  color: #777;
+  color: var(--muted-light);
   font-size: 13px;
 }
 
@@ -558,7 +558,7 @@ textarea:disabled {
   font: inherit;
   border: none;
   background: none;
-  color: #e8590c;
+  color: var(--accent);
   text-decoration: underline;
   cursor: pointer;
 }
@@ -567,7 +567,7 @@ textarea:disabled {
 .mode-tabs {
   display: inline-flex;
   margin-bottom: 12px;
-  border: 1px solid #e8590c;
+  border: 1px solid var(--accent);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -577,18 +577,18 @@ textarea:disabled {
   font-size: 14px;
   border: none;
   background: #fff;
-  color: #e8590c;
+  color: var(--accent);
   cursor: pointer;
 }
 
 .mode-tab[aria-pressed="true"] {
-  background: #e8590c;
+  background: var(--accent);
   color: #fff;
   font-weight: 600;
 }
 
 .menu-hint {
-  color: #777;
+  color: var(--muted-light);
   font-size: 14px;
 }
 
@@ -596,7 +596,7 @@ textarea:disabled {
   max-width: 320px;
   margin: 8px auto 0;
   padding: 10px 12px;
-  border: 1px solid #e3e1dc;
+  border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
   font-size: 14px;
@@ -619,14 +619,14 @@ textarea:disabled {
 .same-category-list li {
   padding: 2px 8px;
   border-radius: 999px;
-  background: #fff1e8;
-  color: #c94d0a;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
   overflow-wrap: anywhere;
 }
 
 .same-category-empty {
   margin: 0;
-  color: #777;
+  color: var(--muted-light);
 }
 
 /* L14: 포크가 오른쪽 위에서 대각선으로 날아와 버튼 오른쪽 위에 꽂힌다(PRD R17). */
@@ -741,4 +741,142 @@ textarea:disabled {
   .chip input:checked + span::after {
     animation: none;
   }
+}
+
+/* L15: 식당 테마 — 식탁보(빨강·흰 체크) 띠, 나무 간판 제목, 메뉴판 종이 영역, 체크무늬 카드 뒷면 */
+body::before {
+  content: "";
+  display: block;
+  height: 26px;
+  background: repeating-conic-gradient(var(--accent) 0 25%, #fff 0 50%) 0 0 / 26px 26px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.container {
+  margin-top: 24px;
+}
+
+.shop-sign {
+  margin: 0 0 24px;
+  padding: 14px 16px 16px;
+  border: 3px solid var(--wood-dark);
+  border-radius: 12px;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg, #7b5446, var(--wood) 55%, #5d4037);
+  box-shadow: 0 6px 0 var(--wood-dark), 0 10px 18px rgba(62, 39, 35, 0.25);
+  text-align: center;
+}
+
+.shop-sign h1 {
+  margin: 0;
+  color: #fff4dc;
+  font-family: "Nanum Myeongjo", "Batang", "Noto Serif KR", serif;
+  font-size: clamp(28px, 7vw, 40px);
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.shop-sign-sub {
+  margin: 0 0 4px;
+  color: var(--mustard);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+}
+
+.menu-board {
+  margin-bottom: 24px;
+  padding: 16px 16px 12px;
+  border: 2px solid var(--wood);
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow:
+    inset 0 0 0 5px var(--paper),
+    inset 0 0 0 6px var(--line),
+    0 3px 10px rgba(62, 39, 35, 0.12);
+}
+
+.menu-board .section-title {
+  margin-top: 0;
+  border-bottom: 1px dashed var(--line);
+  color: var(--wood);
+  font-family: "Nanum Myeongjo", "Batang", "Noto Serif KR", serif;
+  font-size: 20px;
+  text-align: center;
+}
+
+.menu-board .section-title::before,
+.menu-board .section-title::after {
+  content: "~";
+  margin: 0 8px;
+  color: var(--mustard);
+}
+
+.restaurant-item {
+  border-color: var(--line);
+  background: #fff;
+}
+
+.card-back {
+  background: repeating-conic-gradient(var(--accent) 0 25%, #fff 0 50%) 0 0 / 32px 32px;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.card-back .card-mark {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border: 3px solid var(--wood);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--accent);
+  text-shadow: none;
+}
+
+.card-back span:last-child {
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: rgba(62, 39, 35, 0.75);
+}
+
+.card-front {
+  background: var(--paper);
+  border-color: var(--wood);
+}
+
+.card-label {
+  color: var(--accent);
+}
+
+.draw-button {
+  box-shadow: 0 3px 0 var(--accent-dark);
+}
+
+.draw-button:active:not(:disabled) {
+  box-shadow: none;
+  transform: translateY(3px);
+}
+
+.badge.visited {
+  background: #f5ecd9;
+  color: var(--wood);
+}
+
+.same-category {
+  border-color: var(--line);
+  background: #fff;
+}
+
+@media (max-width: 480px) {
+  .menu-board {
+    padding: 14px 12px 10px;
+  }
+}
+
+/* 메뉴판 안 등록 폼은 오류 문구 칸 아래 여백을 줄인다(문구가 없을 때 빈 공간 최소화). */
+.menu-board .restaurant-form .form-error {
+  margin-bottom: 0;
 }

@@ -11,7 +11,7 @@ const MODES = [
 export default function RecommendSection({ restaurants, onPicked, onVisit }) {
   const [mode, setMode] = useState('restaurant')
   return (
-    <section className="recommend" aria-labelledby="recommend-heading">
+    <section className="menu-board recommend" aria-labelledby="recommend-heading">
       <h2 id="recommend-heading" className="section-title">카드 뽑기 추천</h2>
       <div className="mode-tabs" role="group" aria-label="추천 방식">
         {MODES.map((item) => (

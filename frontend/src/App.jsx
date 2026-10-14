@@ -121,7 +121,10 @@ export default function App() {
 
   return (
     <main className="container">
-      <h1>오늘 뭐 먹지?</h1>
+      <header className="shop-sign">
+        <p className="shop-sign-sub" aria-hidden="true">오늘의 식당</p>
+        <h1>오늘 뭐 먹지?</h1>
+      </header>
 
       {apiError && (
         <div className="api-error" role="alert">
@@ -132,10 +135,12 @@ export default function App() {
 
       <RecommendSection restaurants={restaurants} onPicked={handlePicked} onVisit={handleVisit} />
 
-      <h2 className="section-title">식당 등록</h2>
-      <RestaurantForm onCreate={handleCreate} />
+      <section className="menu-board register-section" aria-labelledby="register-heading">
+        <h2 id="register-heading" className="section-title">식당 등록</h2>
+        <RestaurantForm onCreate={handleCreate} />
+      </section>
 
-      <section className="restaurant-section" aria-labelledby="restaurant-list-heading">
+      <section className="menu-board restaurant-section" aria-labelledby="restaurant-list-heading">
         <h2 id="restaurant-list-heading" className="section-title">식당 목록</h2>
         <RestaurantFilters filters={filters} onChange={setFilters} />
         <RestaurantList
