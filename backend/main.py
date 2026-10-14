@@ -3,23 +3,34 @@
 L01: 서버 동작 확인(/api/health).
 L02: 식당 등록·목록(이름 검색, 음식 종류·가격대 필터). 데이터는 MariaDB에 저장한다.
 L03: 식당 부분 수정·삭제·방문 기록(먹었어요).
+L04: 조건(종류·가격대 여러 개, 최근 N일 방문 제외)에 맞는 식당 하나를 무작위 추천.
 """
 
 from collections.abc import Iterator
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.responses import JSONResponse
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
 from backend.models import RestaurantRow
-from backend.schemas import Category, PriceRange, Restaurant, RestaurantCreate, RestaurantUpdate, VisitRequest
+from backend.schemas import (
+    Category,
+    PriceRange,
+    Restaurant,
+    RestaurantCreate,
+    RestaurantUpdate,
+    VisitRequest,
+    validate_date,
+)
 
 app = FastAPI(title="Lunch Pick API")
+
+EXCLUDE_DAYS_MAX = 30
 
 
 @app.exception_handler(OperationalError)
@@ -122,4 +133,47 @@ def visit_restaurant(restaurant_id: int, payload: VisitRequest, session: Session
     row = _get_row(session, restaurant_id)
     row.last_visited_on = date.fromisoformat(payload.visited_on)
     session.commit()
+    return _to_restaurant(row)
+
+
+@app.get("/api/recommendation")
+def recommend(
+    session: SessionDep,
+    category: Annotated[list[Category] | None, Query()] = None,
+    price_range: Annotated[list[PriceRange] | None, Query()] = None,
+    exclude_days: Annotated[int, Query(ge=0, le=EXCLUDE_DAYS_MAX)] = 0,
+    today: str | None = None,
+) -> Restaurant:
+    # today는 사용자 PC의 로컬 날짜다. 보냈으면 항상 검사한다.
+    local_today = None
+    if today is not None:
+        try:
+            local_today = date.fromisoformat(validate_date(today))
+        except ValueError as error:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)) from None
+    if exclude_days > 0 and local_today is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="today is required when exclude_days > 0"
+        )
+
+    # 종류·가격대는 여러 개 중 하나라도 맞으면 되고(OR), 조건끼리는 AND다. 주지 않으면 조건 없음.
+    query = select(RestaurantRow)
+    if category:
+        query = query.where(RestaurantRow.category.in_(category))
+    if price_range:
+        query = query.where(RestaurantRow.price_range.in_(price_range))
+    if exclude_days > 0:
+        # 최근 N일(오늘 포함): today - (N - 1)일부터 today까지.
+        since = local_today - timedelta(days=exclude_days - 1)
+        # 방문 기록이 없거나, 최근 N일 범위 밖에 방문한 식당만 남긴다.
+        query = query.where(
+            or_(
+                RestaurantRow.last_visited_on.is_(None),
+                RestaurantRow.last_visited_on < since,
+                RestaurantRow.last_visited_on > local_today,
+            )
+        )
+    row = session.scalars(query.order_by(func.rand()).limit(1)).first()
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No matching restaurant")
     return _to_restaurant(row)
