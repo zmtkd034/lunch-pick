@@ -15,6 +15,9 @@ export const CATEGORY_LABELS = {
 export const PRICE_RANGES = ['LOW', 'MID', 'HIGH']
 export const PRICE_LABELS = { LOW: '저렴', MID: '보통', HIGH: '비쌈' }
 
+// 추천에서 최근 N일 안에 방문한 곳을 뺄 때 N의 최댓값(서버와 같음).
+export const EXCLUDE_DAYS_MAX = 30
+
 // 등록·수정 입력을 검사해 API로 보낼 값으로 바꾼다. 문제가 있으면 { error }를 돌려준다.
 export function validateRestaurantInput(input) {
   const name = input.name.trim()

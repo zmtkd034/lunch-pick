@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { ApiError, getErrorMessage, request } from './api.js'
 import { getLocalToday, matchesFilters } from './constants.js'
+import RecommendPanel from './components/RecommendPanel.jsx'
 import RestaurantFilters from './components/RestaurantFilters.jsx'
 import RestaurantForm from './components/RestaurantForm.jsx'
 import RestaurantList from './components/RestaurantList.jsx'
 import './App.css'
 
-// L05: 식당 목록과 등록. L06: 검색·필터, 수정·삭제, 먹었어요.
+// L05: 식당 목록과 등록. L06: 검색·필터, 수정·삭제, 먹었어요. L07: 카드 뽑기 추천.
 // 데이터는 백엔드 API(/api/restaurants)로만 주고받는다. 검색·필터는 받아 온 목록으로 화면에서 계산한다.
 export default function App() {
   const [restaurants, setRestaurants] = useState([])
@@ -56,6 +57,15 @@ export default function App() {
       // 처음 목록을 불러오지 못한 상태였다면 서버 목록 전체를 다시 받아 맞춘다.
       reloadRestaurants()
     }
+  }
+
+  // 추천으로 뽑힌 식당을 목록에 반영한다(목록에 없으면 다른 곳에서 등록된 것이므로 추가).
+  function handlePicked(picked) {
+    setRestaurants((current) =>
+      current.some((item) => item.id === picked.id)
+        ? current.map((item) => (item.id === picked.id ? picked : item))
+        : [...current, picked],
+    )
   }
 
   function replaceRestaurant(updated) {
@@ -116,6 +126,9 @@ export default function App() {
         </div>
       )}
 
+      <RecommendPanel restaurants={restaurants} onPicked={handlePicked} onVisit={handleVisit} />
+
+      <h2 className="section-title">식당 등록</h2>
       <RestaurantForm onCreate={handleCreate} />
 
       <section className="restaurant-section" aria-labelledby="restaurant-list-heading">

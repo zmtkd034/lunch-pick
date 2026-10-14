@@ -1,0 +1,192 @@
+import { useRef, useState } from 'react'
+import { ApiError, getErrorMessage, request } from '../api.js'
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  EXCLUDE_DAYS_MAX,
+  PRICE_LABELS,
+  PRICE_RANGES,
+  getLocalToday,
+} from '../constants.js'
+
+// 카드를 섞는 연출 시간. 응답이 빨라도 이만큼은 섞은 뒤 카드를 뒤집는다.
+const SHUFFLE_MS = 700
+
+function prefersReducedMotion() {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+}
+
+// L07: 조건을 고르고 카드를 뽑아 식당 하나를 무작위로 추천받는다.
+// onPicked(restaurant)는 뽑힌 식당을 목록에 반영하고, onVisit(id)는 먹었어요를 기록한다.
+export default function RecommendPanel({ restaurants, onPicked, onVisit }) {
+  const [categories, setCategories] = useState([])
+  const [priceRanges, setPriceRanges] = useState([])
+  const [excludeDays, setExcludeDays] = useState('0')
+  // "idle" | "drawing" | "revealed" | "empty"
+  const [phase, setPhase] = useState('idle')
+  const [pickedId, setPickedId] = useState(null)
+  const [error, setError] = useState('')
+  // 뽑는 중에 다시 눌러도 요청이 겹치지 않게 막는다.
+  const drawingRef = useRef(false)
+  const [visiting, setVisiting] = useState(false)
+
+  // 뽑힌 식당은 목록에서 찾아 보여 준다. 목록에서 수정·먹었어요가 바로 반영되고, 삭제되면 카드를 닫는다.
+  const picked = restaurants.find((restaurant) => restaurant.id === pickedId) ?? null
+  const shownPhase = phase === 'revealed' && picked === null ? 'idle' : phase
+
+  const toggle = (list, setList, value) =>
+    setList(list.includes(value) ? list.filter((item) => item !== value) : [...list, value])
+
+  async function draw() {
+    if (drawingRef.current) {
+      return
+    }
+    const days = Number(excludeDays)
+    if (excludeDays.trim() === '' || !Number.isInteger(days) || days < 0 || days > EXCLUDE_DAYS_MAX) {
+      setError(`최근 방문 제외 일수는 0~${EXCLUDE_DAYS_MAX} 사이의 정수로 입력해 주세요.`)
+      return
+    }
+    drawingRef.current = true
+    setError('')
+    setPhase('drawing')
+
+    const params = new URLSearchParams()
+    categories.forEach((value) => params.append('category', value))
+    priceRanges.forEach((value) => params.append('price_range', value))
+    params.set('exclude_days', String(days))
+    params.set('today', getLocalToday())
+    const shuffle = new Promise((resolve) => setTimeout(resolve, prefersReducedMotion() ? 0 : SHUFFLE_MS))
+
+    try {
+      const [result] = await Promise.all([request('GET', `/api/recommendation?${params}`), shuffle])
+      onPicked(result)
+      setPickedId(result.id)
+      setPhase('revealed')
+    } catch (requestError) {
+      await shuffle
+      setPickedId(null)
+      if (requestError instanceof ApiError && requestError.status === 404) {
+        setPhase('empty')
+      } else {
+        setPhase('idle')
+        setError(getErrorMessage(requestError))
+      }
+    } finally {
+      drawingRef.current = false
+    }
+  }
+
+  async function visit() {
+    if (visiting || picked === null) {
+      return
+    }
+    setVisiting(true)
+    try {
+      await onVisit(picked.id)
+    } finally {
+      setVisiting(false)
+    }
+  }
+
+  const drawing = shownPhase === 'drawing'
+
+  return (
+    <section className="recommend" aria-labelledby="recommend-heading">
+      <h2 id="recommend-heading" className="section-title">카드 뽑기 추천</h2>
+
+      <fieldset className="choice-group" disabled={drawing}>
+        <legend>음식 종류 (선택 안 하면 전체)</legend>
+        {CATEGORIES.map((value) => (
+          <label key={value} className="chip">
+            <input
+              type="checkbox"
+              name="recommend-category"
+              value={value}
+              checked={categories.includes(value)}
+              onChange={() => toggle(categories, setCategories, value)}
+            />
+            <span>{CATEGORY_LABELS[value]}</span>
+          </label>
+        ))}
+      </fieldset>
+
+      <fieldset className="choice-group" disabled={drawing}>
+        <legend>가격대 (선택 안 하면 전체)</legend>
+        {PRICE_RANGES.map((value) => (
+          <label key={value} className="chip">
+            <input
+              type="checkbox"
+              name="recommend-price"
+              value={value}
+              checked={priceRanges.includes(value)}
+              onChange={() => toggle(priceRanges, setPriceRanges, value)}
+            />
+            <span>{PRICE_LABELS[value]}</span>
+          </label>
+        ))}
+      </fieldset>
+
+      <div className="recommend-row">
+        <label className="exclude-days">
+          최근
+          <input
+            id="exclude-days"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={EXCLUDE_DAYS_MAX}
+            step={1}
+            value={excludeDays}
+            onChange={(event) => setExcludeDays(event.target.value)}
+            disabled={drawing}
+          />
+          일 안에 간 곳 빼기 (0이면 안 뺌)
+        </label>
+        <button type="button" className="draw-button" onClick={draw} disabled={drawing}>
+          {drawing ? '카드 섞는 중…' : shownPhase === 'revealed' ? '다시 뽑기' : '카드 뽑기'}
+        </button>
+      </div>
+      <p className="form-error" role="alert">{error}</p>
+
+      <div className="card-stage">
+        <div
+          className={`draw-card${shownPhase === 'revealed' ? ' is-flipped' : ''}${drawing ? ' is-shuffling' : ''}`}
+          data-phase={shownPhase}
+        >
+          <div className="card-inner">
+            <div className="card-face card-back" aria-hidden={shownPhase === 'revealed'}>
+              <span className="card-mark">?</span>
+              <span>오늘 뭐 먹지?</span>
+            </div>
+            <div className="card-face card-front" aria-hidden={shownPhase !== 'revealed'}>
+              {picked && (
+                <>
+                  <span className="card-label">오늘은 여기!</span>
+                  <strong className="card-name">{picked.name}</strong>
+                  <div className="restaurant-meta">
+                    <span className="badge">{CATEGORY_LABELS[picked.category]}</span>
+                    <span className={`badge price-${picked.price_range.toLowerCase()}`}>
+                      {PRICE_LABELS[picked.price_range]}
+                    </span>
+                    <span className="badge visited">
+                      {picked.last_visited_on ? `마지막 방문 ${picked.last_visited_on}` : '방문 기록 없음'}
+                    </span>
+                  </div>
+                  {picked.memo !== '' && <p className="card-memo">{picked.memo}</p>}
+                  <button type="button" className="card-visit" onClick={visit} disabled={visiting}>
+                    먹었어요
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p className="recommend-message" role="status">
+        {shownPhase === 'empty' && '조건에 맞는 식당이 없습니다. 조건을 바꾸거나 식당을 더 등록해 보세요.'}
+        {shownPhase === 'revealed' && picked && `추천 결과: ${picked.name}`}
+      </p>
+    </section>
+  )
+}
