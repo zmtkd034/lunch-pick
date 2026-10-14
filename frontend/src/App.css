@@ -934,12 +934,6 @@ body::after {
   font-family: var(--title-font);
 }
 
-.card-back span:last-child {
-  padding: 3px 12px;
-  border-radius: 999px;
-  background: var(--wood);
-  font-family: var(--title-font);
-}
 
 .card-front {
   border: 3px solid var(--accent);
@@ -987,4 +981,175 @@ body::after {
 /* 메뉴판 안 등록 폼은 오류 문구 칸 아래 여백을 줄인다(문구가 없을 때 빈 공간 최소화). */
 .menu-board .restaurant-form .form-error {
   margin-bottom: 0;
+}
+
+/* L17: 기대감 있는 카드 뒷면(CardBack.jsx) */
+.card-back {
+  overflow: hidden;
+}
+
+.card-back .card-mark {
+  position: relative;
+  z-index: 2;
+  width: 92px;
+  height: 92px;
+  font-size: 64px;
+  line-height: 1;
+  box-shadow: 0 0 0 6px rgba(255, 250, 240, 0.55), 0 6px 14px rgba(90, 58, 38, 0.25);
+  animation: mark-wonder 1.8s ease-in-out infinite;
+}
+
+/* ? 접시: 갸우뚱거리며 두근두근 커졌다 작아지고 빛이 퍼진다 */
+@keyframes mark-wonder {
+  0%,
+  100% {
+    transform: rotate(-8deg) scale(1);
+    box-shadow: 0 0 0 6px rgba(255, 250, 240, 0.55), 0 6px 14px rgba(90, 58, 38, 0.25);
+  }
+  25% {
+    transform: rotate(6deg) scale(1.08);
+  }
+  50% {
+    transform: rotate(-4deg) scale(1);
+    box-shadow: 0 0 0 16px rgba(255, 250, 240, 0), 0 6px 14px rgba(90, 58, 38, 0.25);
+  }
+  75% {
+    transform: rotate(8deg) scale(1.06);
+  }
+}
+
+/* 반짝이: 네 갈래 별이 번갈아 반짝인다. 노란 별과 갈색 별을 섞어 흰·주황 줄무늬 어디서나 보이게 한다. */
+.card-sparkle {
+  position: absolute;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  background: var(--mustard);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  animation: sparkle-twinkle 1.6s ease-in-out infinite;
+}
+
+.sparkle-1 {
+  top: 16%;
+  left: 18%;
+}
+
+.sparkle-2 {
+  top: 20%;
+  right: 16%;
+  width: 18px;
+  height: 18px;
+  background: var(--wood);
+  animation-delay: 0.4s;
+}
+
+.sparkle-3 {
+  bottom: 18%;
+  left: 24%;
+  width: 16px;
+  height: 16px;
+  background: var(--wood);
+  animation-delay: 0.8s;
+}
+
+.sparkle-4 {
+  bottom: 22%;
+  right: 22%;
+  animation-delay: 1.2s;
+}
+
+@keyframes sparkle-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.3) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(45deg);
+  }
+}
+
+/* 작은 물음표가 둥실 떠오르며 사라진다 */
+.card-mini {
+  position: absolute;
+  z-index: 1;
+  bottom: 12%;
+  /* 흰 줄무늬·주황 줄무늬 어디서나 보이도록 갈색 글자에 흰 테두리를 두른다. */
+  color: var(--wood);
+  font-family: var(--title-font);
+  font-size: 24px;
+  text-shadow: -2px 0 #fff, 2px 0 #fff, 0 -2px #fff, 0 2px #fff, 0 3px 4px rgba(90, 58, 38, 0.3);
+  opacity: 0;
+  animation: mini-float 2.7s ease-in infinite;
+}
+
+.mini-1 {
+  left: 12%;
+}
+
+.mini-2 {
+  left: 47%;
+  font-size: 18px;
+  animation-delay: 0.9s;
+}
+
+.mini-3 {
+  right: 12%;
+  font-size: 26px;
+  animation-delay: 1.8s;
+}
+
+@keyframes mini-float {
+  0% {
+    opacity: 0;
+    transform: translateY(0) rotate(-10deg);
+  }
+  20% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-120px) rotate(14deg);
+  }
+}
+
+/* 빛줄기가 가끔 카드 위를 스윽 지나간다 */
+.card-shine {
+  position: absolute;
+  inset: -20% auto -20% -60%;
+  z-index: 1;
+  width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  transform: skewX(-18deg);
+  animation: card-shine 3.2s ease-in-out infinite;
+}
+
+@keyframes card-shine {
+  0%,
+  55% {
+    left: -60%;
+  }
+  85%,
+  100% {
+    left: 130%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-back .card-mark,
+  .card-sparkle,
+  .card-mini,
+  .card-shine {
+    animation: none;
+  }
+
+  .card-sparkle {
+    opacity: 1;
+  }
+
+  .card-shine,
+  .card-mini {
+    display: none;
+  }
 }

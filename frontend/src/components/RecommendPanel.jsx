@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { ApiError, getErrorMessage, request } from '../api.js'
+import CardBack from './CardBack.jsx'
 import {
   CATEGORIES,
   CATEGORY_LABELS,
@@ -196,10 +197,7 @@ export default function RecommendPanel({ restaurants, onPicked, onVisit }) {
           data-phase={shownPhase}
         >
           <div className="card-inner">
-            <div className="card-face card-back" aria-hidden={shownPhase === 'revealed'}>
-              <span className="card-mark">?</span>
-              <span>오늘 뭐 먹지?</span>
-            </div>
+            <CardBack hidden={shownPhase === 'revealed'} />
             <div className="card-face card-front" aria-hidden={shownPhase !== 'revealed'}>
               {picked && (
                 <>

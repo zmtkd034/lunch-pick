@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { ApiError, getErrorMessage, request } from '../api.js'
+import CardBack from './CardBack.jsx'
 import { CATEGORIES, CATEGORY_LABELS, EXCLUDE_IDS_MAX } from '../constants.js'
 
 // 카드를 섞는 연출 시간. 식당 뽑기와 같다.
@@ -107,10 +108,7 @@ export default function MenuPanel({ restaurants }) {
           data-phase={phase}
         >
           <div className="card-inner">
-            <div className="card-face card-back" aria-hidden={phase === 'revealed'}>
-              <span className="card-mark">?</span>
-              <span>오늘 뭐 먹지?</span>
-            </div>
+            <CardBack hidden={phase === 'revealed'} />
             <div className="card-face card-front" aria-hidden={phase !== 'revealed'}>
               {menu && (
                 <>
