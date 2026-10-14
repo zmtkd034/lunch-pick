@@ -629,65 +629,116 @@ textarea:disabled {
   color: #777;
 }
 
-/* L13: 포크(🍴) 효과 */
-/* 한 번 누르는 버튼: 버튼 위에서 내려와 찍고 바로 사라진다(forkEffect.js가 붙였다 지움). */
-.fork-poke {
+/* L14: 포크가 오른쪽 위에서 대각선으로 날아와 버튼 오른쪽 위에 꽂힌다(PRD R17). */
+/* 포크 그림(public/fork.svg)은 갈퀴가 아래를 향하므로 45도 돌리면 갈퀴가 왼쪽 아래(버튼 쪽)를 향한다.
+   transform-origin을 갈퀴 끝(아래 가운데)에 두어, 그 점이 박히는 자리에 고정되게 한다. */
+@keyframes fork-fly-in {
+  /* 날아오는 구간은 점점 빨라지다(던진 포크) 꽂히고, 꽂힌 뒤 떨림은 빠르게 잦아든다. */
+  0% {
+    opacity: 0;
+    transform: translate(110px, -110px) rotate(-315deg);
+    animation-timing-function: cubic-bezier(0.35, 0, 0.85, 0.55);
+  }
+  15% {
+    opacity: 1;
+  }
+  62% {
+    transform: translate(0, 0) rotate(45deg);
+    animation-timing-function: ease-out;
+  }
+  72% {
+    transform: rotate(55deg);
+  }
+  82% {
+    transform: rotate(38deg);
+  }
+  91% {
+    transform: rotate(49deg);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(45deg);
+  }
+}
+
+@keyframes fork-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+/* 한 번 누르는 버튼: 날아와 꽂힌 뒤 바로 사라진다(forkEffect.js가 붙였다 지움). */
+.fork-throw {
   position: fixed;
   z-index: 1000;
-  font-size: 22px;
-  line-height: 1;
   pointer-events: none;
-  animation: fork-poke 0.65s ease-out forwards;
+  transform-origin: 50% 100%;
+  transform: rotate(45deg);
+  filter: drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.25));
+  animation:
+    fork-fly-in 0.52s linear both,
+    fork-fade 0.16s ease-in 0.64s forwards;
 }
 
-@keyframes fork-poke {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -150%) rotate(-30deg);
-  }
-  35% {
-    opacity: 1;
-    transform: translate(-50%, -60%) rotate(0deg);
-  }
-  50% {
-    transform: translate(-50%, -40%) rotate(0deg) scale(1.1);
-  }
-  70% {
-    opacity: 1;
-    transform: translate(-50%, -60%) rotate(0deg);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -110%) rotate(10deg);
-  }
+/* 선택이 유지되는 탭·칩: 선택된 동안 오른쪽 위에 꽂혀 있다. */
+.mode-tab,
+.chip span {
+  position: relative;
 }
 
-/* 선택이 유지되는 탭·칩: 선택된 동안 포크가 꽂혀 있다. */
-.mode-tab[aria-pressed="true"]::before,
-.chip input:checked + span::before {
-  content: "🍴";
-  display: inline-block;
-  margin-right: 4px;
-  animation: fork-stick 0.45s ease-out;
+.mode-tab[aria-pressed="true"]::after,
+.chip input:checked + span::after {
+  content: "";
+  position: absolute;
+  /* 갈퀴 끝이 버튼 오른쪽 위 모서리에서 조금 안쪽(오른쪽 12px, 위 5px)에 박힌다. */
+  left: calc(100% - 12px - 5px);
+  bottom: calc(100% - 5px);
+  width: 10px;
+  height: 30px;
+  background: url("/fork.svg") no-repeat center / contain;
+  transform-origin: 50% 100%;
+  transform: rotate(45deg);
+  filter: drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.25));
+  pointer-events: none;
+  z-index: 2;
+  animation: fork-fly-in 0.52s linear both;
 }
 
-@keyframes fork-stick {
-  0% {
-    opacity: 0;
-    transform: translateY(-10px) rotate(-30deg);
-  }
-  60% {
-    opacity: 1;
-    transform: translateY(2px) rotate(0deg);
-  }
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
+/* 탭 묶음은 모서리를 둥글게 자르던 overflow를 쓰지 않고, 양 끝 탭에 둥근 모서리를 준다(꽂힌 포크가 잘리지 않게). */
+.mode-tabs {
+  overflow: visible;
+}
+
+.mode-tab:first-child {
+  border-radius: 7px 0 0 7px;
+}
+
+.mode-tab:last-child {
+  border-radius: 0 7px 7px 0;
+}
+
+/* 포크가 위로 튀어나오므로 첫 줄 칩·탭 위에 여유를 둔다(설명 글자를 가리지 않게). */
+.choice-group,
+.mode-tabs {
+  margin-top: 14px;
+}
+
+.choice-group legend {
+  margin-bottom: 18px;
+}
+
+.choice-group {
+  row-gap: 18px;
+}
+
+/* 화면 오른쪽 끝 칩의 포크가 가로 스크롤을 만들지 않게 잘라 낸다(세로는 그대로 보임). */
+.container {
+  overflow-x: clip;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mode-tab[aria-pressed="true"]::before,
-  .chip input:checked + span::before {
+  .mode-tab[aria-pressed="true"]::after,
+  .chip input:checked + span::after {
     animation: none;
   }
 }
