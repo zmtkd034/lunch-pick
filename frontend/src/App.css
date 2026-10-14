@@ -1153,3 +1153,8 @@ body::after {
     display: none;
   }
 }
+
+/* L18: 뽑기 버튼은 화면 폭과 관계없이 항상 오른쪽 끝. 줄이 넘어가 혼자 남아도 왼쪽에 붙지 않는다. */
+.recommend-row .draw-button {
+  margin-left: auto;
+}
