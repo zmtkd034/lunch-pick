@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CATEGORY_LABELS, PRICE_LABELS } from '../constants.js'
+import { CATEGORY_LABELS, PREFERENCE_LABELS, PRICE_LABELS } from '../constants.js'
 import RestaurantEditForm from './RestaurantEditForm.jsx'
 
 // 식당 목록. 사용자 입력(이름·메모)은 React가 글자로만 표시한다(HTML로 해석하지 않음).
@@ -71,6 +71,11 @@ export default function RestaurantList({ restaurants, visibleRestaurants, loadSt
                     <span className={`badge price-${restaurant.price_range.toLowerCase()}`}>
                       {PRICE_LABELS[restaurant.price_range]}
                     </span>
+                    {restaurant.preference && (
+                      <span className={`badge pref-${restaurant.preference.toLowerCase()}`}>
+                        {PREFERENCE_LABELS[restaurant.preference]}
+                      </span>
+                    )}
                     <span className="badge visited">
                       {restaurant.last_visited_on ? `마지막 방문 ${restaurant.last_visited_on}` : '방문 기록 없음'}
                     </span>

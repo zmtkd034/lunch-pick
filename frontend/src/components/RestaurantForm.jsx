@@ -4,12 +4,14 @@ import {
   CATEGORIES,
   CATEGORY_LABELS,
   MEMO_MAX_LENGTH,
+  PREFERENCES,
+  PREFERENCE_LABELS,
   PRICE_LABELS,
   PRICE_RANGES,
   validateRestaurantInput,
 } from '../constants.js'
 
-const EMPTY_FORM = { name: '', category: 'ETC', price_range: 'MID', memo: '' }
+const EMPTY_FORM = { name: '', category: 'ETC', price_range: 'MID', memo: '', preference: '' }
 
 // 식당 등록 폼. onCreate(value)는 API에 등록하고 실패하면 오류를 던진다.
 export default function RestaurantForm({ onCreate }) {
@@ -76,6 +78,15 @@ export default function RestaurantForm({ onCreate }) {
           <select value={form.price_range} onChange={update('price_range')} disabled={submitting}>
             {PRICE_RANGES.map((value) => (
               <option key={value} value={value}>{PRICE_LABELS[value]}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          선호도
+          <select value={form.preference} onChange={update('preference')} disabled={submitting}>
+            <option value="">선택 안 함</option>
+            {PREFERENCES.map((value) => (
+              <option key={value} value={value}>{PREFERENCE_LABELS[value]}</option>
             ))}
           </select>
         </label>

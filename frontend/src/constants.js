@@ -15,6 +15,13 @@ export const CATEGORY_LABELS = {
 export const PRICE_RANGES = ['LOW', 'MID', 'HIGH']
 export const PRICE_LABELS = { LOW: '저렴', MID: '보통', HIGH: '비쌈' }
 
+// 선호도(L10). 화면의 빈 값('')은 미지정이며 API에는 null로 보낸다.
+export const PREFERENCES = ['LIKE', 'SOSO', 'DISLIKE']
+export const PREFERENCE_LABELS = { LIKE: '좋아요', SOSO: '그저 그래요', DISLIKE: '별로' }
+
+// 패스한 식당 id를 추천 요청에 함께 보낼 수 있는 최대 개수(서버와 같음).
+export const EXCLUDE_IDS_MAX = 100
+
 // 추천에서 최근 N일 안에 방문한 곳을 뺄 때 N의 최댓값(서버와 같음).
 export const EXCLUDE_DAYS_MAX = 30
 
@@ -36,7 +43,18 @@ export function validateRestaurantInput(input) {
   if (input.memo.length > MEMO_MAX_LENGTH) {
     return { error: `메모는 ${MEMO_MAX_LENGTH}자 이하로 입력해 주세요.` }
   }
-  return { value: { name, category: input.category, price_range: input.price_range, memo: input.memo } }
+  if (input.preference !== '' && !PREFERENCES.includes(input.preference)) {
+    return { error: '선호도를 다시 선택해 주세요.' }
+  }
+  return {
+    value: {
+      name,
+      category: input.category,
+      price_range: input.price_range,
+      memo: input.memo,
+      preference: input.preference === '' ? null : input.preference,
+    },
+  }
 }
 
 // 사용자 PC의 로컬 날짜(YYYY-MM-DD). 방문 기록과 추천의 기준 날짜로 쓴다.

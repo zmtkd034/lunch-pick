@@ -502,3 +502,63 @@ textarea:disabled {
     animation: none;
   }
 }
+
+/* L10: 선호도 배지, 별로 빼기, 패스 */
+.badge.pref-like {
+  background: #e7f5ff;
+  color: #1864ab;
+}
+
+.badge.pref-soso {
+  background: #f1f3f5;
+  color: #495057;
+}
+
+.badge.pref-dislike {
+  background: #fff0f6;
+  color: #a61e4d;
+}
+
+.exclude-disliked {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #555;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.card-pass {
+  padding: 6px 14px;
+  font-size: 14px;
+  border: 1px solid #adb5bd;
+  border-radius: 6px;
+  background: #fff;
+  color: #495057;
+  cursor: pointer;
+}
+
+.passed-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px 0 0;
+  color: #777;
+  font-size: 13px;
+}
+
+.link-button {
+  padding: 0;
+  font: inherit;
+  border: none;
+  background: none;
+  color: #e8590c;
+  text-decoration: underline;
+  cursor: pointer;
+}

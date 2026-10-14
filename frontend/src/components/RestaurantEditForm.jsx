@@ -4,6 +4,8 @@ import {
   CATEGORIES,
   CATEGORY_LABELS,
   MEMO_MAX_LENGTH,
+  PREFERENCES,
+  PREFERENCE_LABELS,
   PRICE_LABELS,
   PRICE_RANGES,
   validateRestaurantInput,
@@ -16,6 +18,7 @@ export default function RestaurantEditForm({ restaurant, onSave, onCancel }) {
     category: restaurant.category,
     price_range: restaurant.price_range,
     memo: restaurant.memo,
+    preference: restaurant.preference ?? '',
   })
   const [error, setError] = useState('')
   const savingRef = useRef(false)
@@ -70,6 +73,12 @@ export default function RestaurantEditForm({ restaurant, onSave, onCancel }) {
         <select aria-label="가격대 수정" value={form.price_range} onChange={update('price_range')} disabled={saving}>
           {PRICE_RANGES.map((value) => (
             <option key={value} value={value}>{PRICE_LABELS[value]}</option>
+          ))}
+        </select>
+        <select aria-label="선호도 수정" value={form.preference} onChange={update('preference')} disabled={saving}>
+          <option value="">선호도 선택 안 함</option>
+          {PREFERENCES.map((value) => (
+            <option key={value} value={value}>{PREFERENCE_LABELS[value]}</option>
           ))}
         </select>
       </div>
