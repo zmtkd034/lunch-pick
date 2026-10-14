@@ -35,3 +35,21 @@ export function validateRestaurantInput(input) {
   }
   return { value: { name, category: input.category, price_range: input.price_range, memo: input.memo } }
 }
+
+// 사용자 PC의 로컬 날짜(YYYY-MM-DD). 방문 기록과 추천의 기준 날짜로 쓴다.
+export function getLocalToday() {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${now.getFullYear()}-${month}-${day}`
+}
+
+// 이름 검색(대소문자 무시, 앞뒤 공백 제거), 음식 종류, 가격대를 모두 만족하면 true(AND).
+export function matchesFilters(restaurant, filters) {
+  const keyword = filters.q.trim().toLowerCase()
+  return (
+    (keyword === '' || restaurant.name.toLowerCase().includes(keyword)) &&
+    (filters.category === '' || restaurant.category === filters.category) &&
+    (filters.price_range === '' || restaurant.price_range === filters.price_range)
+  )
+}

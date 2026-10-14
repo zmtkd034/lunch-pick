@@ -178,3 +178,107 @@ textarea:disabled {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+/* L06: 검색·필터, 항목 버튼, 수정 폼 */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.filters input,
+.filters select,
+.edit-form input,
+.edit-form select,
+.edit-form textarea {
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  color: #222;
+}
+
+.filters input {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.restaurant-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.restaurant-main {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.restaurant-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.restaurant-actions button,
+.edit-actions button {
+  padding: 6px 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+}
+
+.restaurant-actions button[data-action="visit"] {
+  border-color: #e8590c;
+  color: #e8590c;
+}
+
+.restaurant-actions button[data-action="delete"] {
+  color: #c62828;
+}
+
+.edit-form {
+  display: flex;
+  flex: 1 1 100%;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.edit-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.edit-form textarea {
+  resize: vertical;
+}
+
+.edit-actions button[type="submit"] {
+  border: none;
+  background: #e8590c;
+  color: #fff;
+}
+
+.edit-error {
+  margin: 0;
+  color: #c62828;
+  font-size: 14px;
+}
+
+.edit-error:empty {
+  display: none;
+}
