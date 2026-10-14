@@ -31,8 +31,13 @@
   - 확인 결과(2026-10-14, HTTP 요청 자동 확인 27개 통과 + L03 46개·L02 40개 회귀 통과): 방문일이 다른 식당 6개로 조건마다 150번씩 호출해 허용된 식당만 나오고 허용된 식당이 모두 한 번 이상 나옴(무작위). 조건 없음 전체, category 하나·여러 개, price_range 하나·여러 개, 종류·가격대 AND. today 2026-10-14 기준 exclude_days 0(제외 없음)·1(오늘 방문 제외)·7(6일 전까지 제외, 7일 전 포함)·8·30, 방문 기록 없는 곳은 항상 포함, 미래 날짜 방문은 범위 밖이라 포함, today를 바꾸면 기준도 바뀜. 식당 0개·조건 불일치·제외 후 없음 404 No matching restaurant. 잘못된·소문자 category, 잘못된 price_range, exclude_days 31·-1·문자, today 누락(N≥1)·없는 날짜·슬래시, N=0이어도 잘못된 today 422. 추천 호출은 데이터를 바꾸지 않음. 시험 데이터 삭제 후 restaurants 0건.
   - 남은 오류: 없음. 무작위는 DB의 RAND()로 고르며, 식당 수가 많지 않은 개인용 규모를 전제로 한다.
 ## 2장: React 화면
-- [ ] L05: React(Vite) 프로젝트 생성, 개발 서버에서 /api를 8100으로 전달, 식당 목록·등록 화면.
+- [x] L05: React(Vite) 프로젝트 생성, 개발 서버에서 /api를 8100으로 전달, 식당 목록·등록 화면.
   확인: 화면 등록이 API·DB에 저장, 빈 이름 거절, HTML 글자 표시. (npm 필요: sudo apt install npm)
+  - 변경 파일: frontend/(신규, npm create vite@9.2.1 --template react 후 예제 파일·이미지 삭제): vite.config.js(127.0.0.1:5173, /api → 127.0.0.1:8100 전달), index.html(한국어·제목), src/api.js(API 호출·오류 문구), src/constants.js(종류·가격대 이름, 입력 검증), src/components/RestaurantForm.jsx(등록 폼), src/components/RestaurantList.jsx(목록), src/App.jsx·App.css·index.css
+  - 새 패키지(npm, frontend/package.json·package-lock.json): react·react-dom 19, vite 8, @vitejs/plugin-react 6, oxlint(코드 검사) — Vite React 템플릿 기본 구성. 사용자가 sudo apt install -y npm으로 npm 9.2.0 설치.
+  - 실행 명령: 백엔드 .venv 활성화 후 python -m uvicorn backend.main:app --host 127.0.0.1 --port 8100 --reload / 화면 cd frontend && npm install(처음 한 번) && npm run dev → http://127.0.0.1:5173
+  - 확인 결과(2026-10-14, Headless Chromium 자동 확인 21개 통과, npm run lint 경고 0, npm run build 성공): 5173에서 /api/health가 8100으로 전달됨. 처음 빈 목록 안내, 빈 이름·51자 이름 화면에서 거절(서버로 안 보냄, 입력값 유지). 등록 시 목록 표시·이름 공백 제거·배지(종류·가격대·방문 기록 없음)·메모, 입력칸 비움·선택칸 기본값 복귀, API 목록과 종류·가격대·메모 일치, 기본값 기타·보통. HTML 이름·메모 글자 표시(img·script 실행 안 됨). 빠르게 3번 제출해도 1건만 등록. 새로고침 후 목록·등록 순서 유지, 마지막 방문일 표시, 화면 목록 = API 목록. 백엔드 중지 시 "식당 목록을 불러오지 못했습니다" 배너(빈 목록 안내 대신)·등록 실패 안내·입력값 유지, 백엔드 재시작 후 다시 불러오기로 복구. 375px 가로 스크롤 없음, JS 오류 없음. 첫 확인에서 빠른 중복 제출 시 3건이 등록되는 문제를 발견해 useRef로 막도록 고친 뒤 데이터를 지우고 전체를 다시 확인했다. lint 경고(effect 안 setState)는 React 권장 방식(응답 콜백에서만 setState, 이전 응답 무시)으로 고쳤다. 시험 데이터 삭제 후 restaurants 0건.
+  - 남은 오류: 없음. 수정·삭제·먹었어요·검색 필터 화면은 L06, 추천 화면은 L07에서 만든다.
 - [ ] L06: 검색·필터, 수정·삭제(확인 창)·"먹었어요" 화면.
   확인: 필터 중 정확한 항목 수정·삭제, 삭제 취소 시 유지, 방문일 표시.
 - [ ] L07: 추천 화면(조건 선택 + 카드 뽑기 애니메이션 + 결과에서 "먹었어요").
