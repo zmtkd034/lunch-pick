@@ -120,9 +120,7 @@ export default function RecommendPanel({ restaurants, onPicked, onVisit }) {
   const drawing = shownPhase === 'drawing'
 
   return (
-    <section className="recommend" aria-labelledby="recommend-heading">
-      <h2 id="recommend-heading" className="section-title">카드 뽑기 추천</h2>
-
+    <div className="recommend-panel">
       <fieldset className="choice-group" disabled={drawing}>
         <legend>음식 종류 (선택 안 하면 전체)</legend>
         {CATEGORIES.map((value) => (
@@ -249,6 +247,6 @@ export default function RecommendPanel({ restaurants, onPicked, onVisit }) {
           </button>
         </p>
       )}
-    </section>
+    </div>
   )
 }

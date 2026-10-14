@@ -562,3 +562,69 @@ textarea:disabled {
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* L12: 식당 뽑기/메뉴 뽑기 전환, 같은 종류 내 식당 */
+.mode-tabs {
+  display: inline-flex;
+  margin-bottom: 12px;
+  border: 1px solid #e8590c;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mode-tab {
+  padding: 8px 16px;
+  font-size: 14px;
+  border: none;
+  background: #fff;
+  color: #e8590c;
+  cursor: pointer;
+}
+
+.mode-tab[aria-pressed="true"] {
+  background: #e8590c;
+  color: #fff;
+  font-weight: 600;
+}
+
+.menu-hint {
+  color: #777;
+  font-size: 14px;
+}
+
+.same-category {
+  max-width: 320px;
+  margin: 8px auto 0;
+  padding: 10px 12px;
+  border: 1px solid #e3e1dc;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+}
+
+.same-category-title {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.same-category-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.same-category-list li {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff1e8;
+  color: #c94d0a;
+  overflow-wrap: anywhere;
+}
+
+.same-category-empty {
+  margin: 0;
+  color: #777;
+}
