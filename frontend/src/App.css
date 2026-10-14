@@ -628,3 +628,66 @@ textarea:disabled {
   margin: 0;
   color: #777;
 }
+
+/* L13: 포크(🍴) 효과 */
+/* 한 번 누르는 버튼: 버튼 위에서 내려와 찍고 바로 사라진다(forkEffect.js가 붙였다 지움). */
+.fork-poke {
+  position: fixed;
+  z-index: 1000;
+  font-size: 22px;
+  line-height: 1;
+  pointer-events: none;
+  animation: fork-poke 0.65s ease-out forwards;
+}
+
+@keyframes fork-poke {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -150%) rotate(-30deg);
+  }
+  35% {
+    opacity: 1;
+    transform: translate(-50%, -60%) rotate(0deg);
+  }
+  50% {
+    transform: translate(-50%, -40%) rotate(0deg) scale(1.1);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -60%) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -110%) rotate(10deg);
+  }
+}
+
+/* 선택이 유지되는 탭·칩: 선택된 동안 포크가 꽂혀 있다. */
+.mode-tab[aria-pressed="true"]::before,
+.chip input:checked + span::before {
+  content: "🍴";
+  display: inline-block;
+  margin-right: 4px;
+  animation: fork-stick 0.45s ease-out;
+}
+
+@keyframes fork-stick {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) rotate(-30deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(2px) rotate(0deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mode-tab[aria-pressed="true"]::before,
+  .chip input:checked + span::before {
+    animation: none;
+  }
+}

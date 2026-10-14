@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { ApiError, getErrorMessage, request } from './api.js'
 import { getLocalToday, matchesFilters } from './constants.js'
+import { installForkEffect } from './forkEffect.js'
 import RecommendSection from './components/RecommendSection.jsx'
 import RestaurantFilters from './components/RestaurantFilters.jsx'
 import RestaurantForm from './components/RestaurantForm.jsx'
 import RestaurantList from './components/RestaurantList.jsx'
 import './App.css'
 
-// L05: 식당 목록과 등록. L06: 검색·필터, 수정·삭제, 먹었어요. L07: 카드 뽑기 추천. L12: 메뉴 뽑기.
+// L05: 식당 목록과 등록. L06: 검색·필터, 수정·삭제, 먹었어요. L07: 카드 뽑기 추천. L12: 메뉴 뽑기. L13: 버튼 포크 효과.
 // 데이터는 백엔드 API(/api/restaurants)로만 주고받는다. 검색·필터는 받아 온 목록으로 화면에서 계산한다.
 export default function App() {
   const [restaurants, setRestaurants] = useState([])
@@ -19,6 +20,9 @@ export default function App() {
   // 다시 불러오기에 성공한 뒤 보여 줄 안내(예: 404 후 "목록을 새로 불러왔습니다"). 없으면 배너를 지운다.
   const reloadNoticeRef = useRef('')
   const [filters, setFilters] = useState({ q: '', category: '', price_range: '' })
+
+  // 버튼을 누르면 포크가 찍고 사라지는 효과. 화면이 사라질 때 해제한다.
+  useEffect(() => installForkEffect(), [])
 
   useEffect(() => {
     // 응답이 오기 전에 다시 불러오기를 누르면 이전 응답은 쓰지 않는다.
