@@ -1,6 +1,6 @@
 # 오늘 뭐 먹지? API 명세
 
-PRD의 요구사항(R01~R13)을 API로 옮긴 계약이다. 구현 순서는 PLAN을 따른다.
+PRD의 요구사항(R01~R16)을 API로 옮긴 계약이다. 구현 순서는 PLAN을 따른다.
 
 | 엔드포인트 | 구현 작업 |
 |---|---|
@@ -9,6 +9,7 @@ PRD의 요구사항(R01~R13)을 API로 옮긴 계약이다. 구현 순서는 PLA
 | `PATCH /api/restaurants/{id}`, `DELETE /api/restaurants/{id}`, `POST /api/restaurants/{id}/visit` | L03 |
 | `GET /api/recommendation` | L04 |
 | 선호도(`preference`), 추천의 `exclude_disliked`·`exclude_ids` | L09 |
+| `GET /api/menu-recommendation` | L11 |
 
 ## 공통
 
@@ -50,7 +51,7 @@ PRD의 요구사항(R01~R13)을 API로 옮긴 계약이다. 구현 순서는 PLA
 
 | 상태 코드 | 상황 |
 |---|---|
-| `404 Not Found` | 해당 `id`의 식당이 없음(`{"detail": "Restaurant not found"}`), 추천 조건에 맞는 식당이 없음(`{"detail": "No matching restaurant"}`) |
+| `404 Not Found` | 해당 `id`의 식당이 없음(`{"detail": "Restaurant not found"}`), 추천 조건에 맞는 식당이 없음(`{"detail": "No matching restaurant"}`), 조건에 맞는 메뉴가 없음(`{"detail": "No matching menu"}`) |
 | `422 Unprocessable Entity` | 입력 규칙 위반(빈 이름, 51자 이름, 501자 메모, 잘못된 종류·가격대·날짜, 정의되지 않은 필드 등). `detail`은 위반 항목 목록(FastAPI 기본 형식) |
 | `503 Service Unavailable` | DB에 연결할 수 없음. `{"detail": "Database unavailable"}`, 접속 정보 등 내부 오류는 보여 주지 않는다. |
 
@@ -131,6 +132,22 @@ PRD의 요구사항(R01~R13)을 API로 옮긴 계약이다. 구현 순서는 PLA
 - 응답 `200 OK`: Restaurant 하나.
 - 조건에 맞는 식당이 없으면 `404` `{"detail": "No matching restaurant"}`.
 - 잘못된 값(종류·가격대·범위 밖 `exclude_days`·잘못된 날짜·`today` 누락·정수가 아닌 `exclude_ids`·101개 이상 `exclude_ids`·불리언이 아닌 `exclude_disliked`)은 `422`.
+
+### `GET /api/menu-recommendation`
+
+기본 메뉴 목록(음식 종류별 10개, 총 60개)에서 메뉴 하나를 무작위로 추천한다. 식당 데이터와 DB는 쓰지 않는다.
+
+쿼리 파라미터:
+
+| 이름 | 설명 |
+|---|---|
+| `category` | 음식 종류. 여러 번 줄 수 있다. 없으면 모든 종류. |
+| `exclude_ids` | 뺄 메뉴 id(패스한 메뉴). 여러 번 줄 수 있다, 최대 100개. 없는 id는 무시한다. |
+
+- 응답 `200 OK`: Menu `{"id": 11, "name": "짜장면", "category": "CHINESE"}`. `id`는 기본 목록의 고정 번호다.
+- 조건에 맞는 메뉴가 없으면 `404` `{"detail": "No matching menu"}`.
+- 잘못된 `category`, 정수가 아닌 `exclude_ids`, 101개 이상 `exclude_ids`는 `422`.
+- 같은 종류의 내 식당 목록은 화면이 식당 목록(`GET /api/restaurants`)에서 같은 `category`로 찾아 보여 준다.
 
 ## 참고
 

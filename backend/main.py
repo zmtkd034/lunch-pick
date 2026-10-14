@@ -5,8 +5,10 @@ L02: 식당 등록·목록(이름 검색, 음식 종류·가격대 필터). 데�
 L03: 식당 부분 수정·삭제·방문 기록(먹었어요).
 L04: 조건(종류·가격대 여러 개, 최근 N일 방문 제외)에 맞는 식당 하나를 무작위 추천.
 L09: 선호도(preference), 추천에서 별로 제외(exclude_disliked)·패스한 식당 제외(exclude_ids).
+L11: 기본 메뉴 목록에서 메뉴 하나를 무작위 추천(종류 여러 개, 패스한 메뉴 제외).
 """
 
+import random
 from collections.abc import Iterator
 from datetime import date, datetime, timedelta, timezone
 from typing import Annotated
@@ -18,9 +20,11 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
+from backend.menus import MENUS
 from backend.models import RestaurantRow
 from backend.schemas import (
     Category,
+    Menu,
     PriceRange,
     Restaurant,
     RestaurantCreate,
@@ -190,3 +194,18 @@ def recommend(
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No matching restaurant")
     return _to_restaurant(row)
+
+
+@app.get("/api/menu-recommendation")
+def recommend_menu(
+    category: Annotated[list[Category] | None, Query()] = None,
+    exclude_ids: Annotated[list[int] | None, Query(max_length=EXCLUDE_IDS_MAX)] = None,
+) -> Menu:
+    # 기본 메뉴 목록에서 고른 종류(여러 개 중 하나라도 맞으면 됨)의 메뉴를 무작위로 하나 고른다. DB는 쓰지 않는다.
+    excluded = set(exclude_ids or [])
+    candidates = [
+        menu for menu in MENUS if (not category or menu.category in category) and menu.id not in excluded
+    ]
+    if not candidates:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No matching menu")
+    return random.choice(candidates)

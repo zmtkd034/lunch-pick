@@ -82,6 +82,13 @@ class VisitRequest(BaseModel):
     _validate_visited_on = field_validator("visited_on")(validate_date)
 
 
+class Menu(BaseModel):
+    # 기본 메뉴(L11). 앱이 제공하는 고정 목록이다.
+    id: int
+    name: str
+    category: Category
+
+
 class Restaurant(BaseModel):
     id: int
     name: str
