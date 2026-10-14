@@ -53,7 +53,8 @@ PRD의 요구사항(R01~R16)을 API로 옮긴 계약이다. 구현 순서는 PLA
 |---|---|
 | `404 Not Found` | 해당 `id`의 식당이 없음(`{"detail": "Restaurant not found"}`), 추천 조건에 맞는 식당이 없음(`{"detail": "No matching restaurant"}`), 조건에 맞는 메뉴가 없음(`{"detail": "No matching menu"}`) |
 | `422 Unprocessable Entity` | 입력 규칙 위반(빈 이름, 51자 이름, 501자 메모, 잘못된 종류·가격대·날짜, 정의되지 않은 필드 등). `detail`은 위반 항목 목록(FastAPI 기본 형식) |
-| `503 Service Unavailable` | DB에 연결할 수 없음. `{"detail": "Database unavailable"}`, 접속 정보 등 내부 오류는 보여 주지 않는다. |
+| `500 Internal Server Error` | 연결 외의 DB 오류(예: 테이블 열 없음, 잠금 시간 초과). `{"detail": "Internal server error"}`. 원인은 서버 로그에만 남긴다(L21). |
+| `503 Service Unavailable` | DB에 연결할 수 없음(서버 꺼짐·연결 끊김·접속 정보 오류). `{"detail": "Database unavailable"}`, 접속 정보 등 내부 오류는 보여 주지 않고 원인은 서버 로그에 남긴다. |
 
 ## 엔드포인트
 
@@ -109,7 +110,7 @@ PRD의 요구사항(R01~R16)을 API로 옮긴 계약이다. 구현 순서는 PLA
 { "visited_on": "2026-10-14" }
 ```
 
-- `visited_on`은 필수이며 실제 존재하는 `YYYY-MM-DD` 날짜다.
+- `visited_on`은 필수이며 실제 존재하는 `YYYY-MM-DD` 날짜다. 1000-01-01~9999-12-31만 받는다(L21).
 - 보낸 날짜를 `last_visited_on`으로 저장한다.
 - 응답 `200 OK`: 수정된 Restaurant. 없는 `id`는 `404`, 규칙 위반은 `422`.
 
@@ -124,7 +125,7 @@ PRD의 요구사항(R01~R16)을 API로 옮긴 계약이다. 구현 순서는 PLA
 | `category` | 음식 종류. 여러 번 줄 수 있다(`?category=KOREAN&category=SNACK`). 없으면 모든 종류. |
 | `price_range` | 가격대. 여러 번 줄 수 있다. 없으면 모든 가격대. |
 | `exclude_days` | 0~30. 최근 N일 안에 방문한 식당을 뺀다. 0이면 빼지 않는다. 기본값 0. |
-| `today` | 사용자 PC의 로컬 날짜 `YYYY-MM-DD`. `exclude_days`가 1 이상이면 필수. |
+| `today` | 사용자 PC의 로컬 날짜 `YYYY-MM-DD`(1000-01-01~9999-12-31). `exclude_days`가 1 이상이면 필수. |
 | `exclude_disliked` | `true`면 선호도가 `DISLIKE`인 식당을 뺀다. 선호도 미지정은 빼지 않는다. 기본값 `false`. |
 | `exclude_ids` | 뺄 식당 id(패스한 식당). 여러 번 줄 수 있다(`?exclude_ids=3&exclude_ids=5`), 최대 100개. 없는 id는 무시한다. |
 

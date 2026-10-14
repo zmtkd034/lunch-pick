@@ -9,6 +9,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 NAME_MAX_LENGTH = 50
 MEMO_MAX_LENGTH = 500
 DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+# MariaDB DATE가 보장하는 범위의 시작(L21). 이보다 이른 날짜는 저장·날짜 계산에서 오류가 날 수 있어 받지 않는다.
+DATE_MIN_YEAR = 1000
 
 Category = Literal["KOREAN", "CHINESE", "JAPANESE", "WESTERN", "SNACK", "ETC"]
 PriceRange = Literal["LOW", "MID", "HIGH"]
@@ -41,9 +43,11 @@ def validate_date(value: str) -> str:
     if not DATE_PATTERN.fullmatch(value):
         raise ValueError("date must be YYYY-MM-DD")
     try:
-        date.fromisoformat(value)
+        parsed = date.fromisoformat(value)
     except ValueError:
         raise ValueError("date must be a real calendar date") from None
+    if parsed.year < DATE_MIN_YEAR:
+        raise ValueError(f"date must be between {DATE_MIN_YEAR}-01-01 and 9999-12-31")
     return value
 
 

@@ -6,8 +6,10 @@ L03: 식당 부분 수정·삭제·방문 기록(먹었어요).
 L04: 조건(종류·가격대 여러 개, 최근 N일 방문 제외)에 맞는 식당 하나를 무작위 추천.
 L09: 선호도(preference), 추천에서 별로 제외(exclude_disliked)·패스한 식당 제외(exclude_ids).
 L11: 기본 메뉴 목록에서 메뉴 하나를 무작위 추천(종류 여러 개, 패스한 메뉴 제외).
+L21: DB 오류는 서버 로그에 남기고, 연결 오류만 503·나머지는 500으로 응답한다.
 """
 
+import logging
 import random
 from collections.abc import Iterator
 from datetime import date, datetime, timedelta, timezone
@@ -16,7 +18,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import func, or_, select
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
@@ -40,10 +42,23 @@ EXCLUDE_DAYS_MAX = 30
 EXCLUDE_IDS_MAX = 100
 
 
-@app.exception_handler(OperationalError)
-def database_unavailable(request: Request, exc: OperationalError) -> JSONResponse:
-    # DB에 연결하지 못하면 내부 오류 내용(접속 정보 등)을 숨기고 503으로 알린다.
-    return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content={"detail": "Database unavailable"})
+logger = logging.getLogger("uvicorn.error")
+
+# 연결·접속 실패로 보는 MariaDB/PyMySQL 오류 번호. 이때만 503(DB에 연결할 수 없음)으로 알린다.
+# 1044·1045 접속 권한/비밀번호, 1049 DB 없음, 2002·2003 서버에 연결 못함, 2006·2013 연결 끊김.
+DB_CONNECTION_ERROR_CODES = {1044, 1045, 1049, 2002, 2003, 2006, 2013}
+
+
+@app.exception_handler(DBAPIError)
+def database_error(request: Request, exc: DBAPIError) -> JSONResponse:
+    # 응답에는 내부 오류 내용(접속 정보·SQL)을 보여 주지 않고, 서버 로그에만 원인을 남긴다.
+    # 로그에는 드라이버 오류(번호와 메시지)만 쓰고 SQL 문장과 값은 쓰지 않는다. 비밀번호는 오류 메시지에 들어가지 않는다.
+    args = getattr(exc.orig, "args", ())
+    code = args[0] if args and isinstance(args[0], int) else None
+    logger.error("DB 오류 %s %s: %s %r", request.method, request.url.path, type(exc.orig).__name__, args)
+    if exc.connection_invalidated or code in DB_CONNECTION_ERROR_CODES:
+        return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content={"detail": "Database unavailable"})
+    return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"detail": "Internal server error"})
 
 
 def get_session() -> Iterator[Session]:
