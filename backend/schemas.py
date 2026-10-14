@@ -1,4 +1,4 @@
-"""요청·응답 데이터 형식과 입력 검증 규칙(API-SPEC.md의 Restaurant)."""
+"""요청·응답 데이터 형식과 입력 검증 규칙(API-SPEC.md의 Restaurant·User)."""
 
 import re
 from datetime import date
@@ -8,6 +8,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 NAME_MAX_LENGTH = 50
 MEMO_MAX_LENGTH = 500
+USERNAME_PATTERN = r"^[a-z0-9]{4,20}$"
+PASSWORD_MIN_LENGTH = 8
+PASSWORD_MAX_LENGTH = 64
 DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # MariaDB DATE가 보장하는 범위의 시작(L21). 이보다 이른 날짜는 저장·날짜 계산에서 오류가 날 수 있어 받지 않는다.
 DATE_MIN_YEAR = 1000
@@ -101,4 +104,27 @@ class Restaurant(BaseModel):
     memo: str
     preference: Preference | None
     last_visited_on: str | None
+    created_at: str
+
+
+class SignupRequest(BaseModel):
+    # 아이디는 공백 제거·소문자 변환 없이 그대로 검사한다. 비밀번호는 앞뒤 공백도 비밀번호로 본다(L25).
+    model_config = ConfigDict(extra="forbid")
+
+    username: str = Field(pattern=USERNAME_PATTERN)
+    password: str = Field(min_length=PASSWORD_MIN_LENGTH, max_length=PASSWORD_MAX_LENGTH)
+
+
+class LoginRequest(BaseModel):
+    # 아이디·비밀번호 규칙은 검사하지 않는다. 규칙에 맞지 않아도 422가 아니라 로그인 실패(401)로 처리한다.
+    model_config = ConfigDict(extra="forbid")
+
+    username: str
+    password: str
+
+
+class User(BaseModel):
+    # 비밀번호와 해시는 응답에 넣지 않는다.
+    id: int
+    username: str
     created_at: str

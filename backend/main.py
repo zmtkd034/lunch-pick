@@ -7,6 +7,7 @@ L04: 조건(종류·가격대 여러 개, 최근 N일 방문 제외)에 맞는 �
 L09: 선호도(preference), 추천에서 별로 제외(exclude_disliked)·패스한 식당 제외(exclude_ids).
 L11: 기본 메뉴 목록에서 메뉴 하나를 무작위 추천(종류 여러 개, 패스한 메뉴 제외).
 L21: DB 오류는 서버 로그에 남기고, 연결 오류만 503·나머지는 500으로 응답한다.
+L25: 회원가입·로그인·로그아웃·현재 사용자. 로그인 상태는 DB 세션과 HttpOnly 쿠키(lunch_pick_session)로 유지한다.
 """
 
 import logging
@@ -15,24 +16,38 @@ from collections.abc import Iterator
 from datetime import date, datetime, timedelta, timezone
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response, status
+from fastapi import Cookie, Depends, FastAPI, HTTPException, Query, Request, Response, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from sqlalchemy import func, or_, select
-from sqlalchemy.exc import DBAPIError
+from sqlalchemy import delete, func, or_, select
+from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
 from backend.menus import MENUS
-from backend.models import RestaurantRow
+from backend.models import RestaurantRow, SessionRow, UserRow
 from backend.schemas import (
+    PASSWORD_MAX_LENGTH,
     Category,
+    LoginRequest,
     Menu,
     PriceRange,
     Restaurant,
     RestaurantCreate,
     RestaurantUpdate,
+    SignupRequest,
+    User,
     VisitRequest,
     validate_date,
+)
+from backend.security import (
+    hash_password,
+    hash_session_token,
+    new_session_token,
+    verify_dummy_password,
+    verify_password,
 )
 
 app = FastAPI(title="Lunch Pick API")
@@ -40,6 +55,11 @@ app = FastAPI(title="Lunch Pick API")
 EXCLUDE_DAYS_MAX = 30
 # 패스한 식당 id는 화면에서 모아 보낸다. 요청이 지나치게 길어지지 않게 개수를 제한한다.
 EXCLUDE_IDS_MAX = 100
+# 같은 컴퓨터의 Task Flow(task_flow_session)와 섞이지 않게 쿠키 이름을 다르게 한다(L25).
+SESSION_COOKIE = "lunch_pick_session"
+SESSION_MAX_AGE = timedelta(days=7)
+# 학습용 HTTP 주소에서도 동작하도록 Secure는 붙이지 않는다(API-SPEC 인증 참고).
+SESSION_COOKIE_OPTIONS = {"path": "/api", "httponly": True, "samesite": "lax", "secure": False}
 
 
 logger = logging.getLogger("uvicorn.error")
@@ -61,17 +81,52 @@ def database_error(request: Request, exc: DBAPIError) -> JSONResponse:
     return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"detail": "Internal server error"})
 
 
+@app.exception_handler(RequestValidationError)
+async def hide_auth_input(request: Request, exc: RequestValidationError) -> JSONResponse:
+    # 인증 API의 422에는 보낸 값(input, 비밀번호 포함)을 되돌려 주지 않는다. 다른 API는 기본 형식 그대로다.
+    if not request.url.path.startswith("/api/auth/"):
+        return await request_validation_exception_handler(request, exc)
+    errors = [{key: value for key, value in error.items() if key != "input"} for error in exc.errors()]
+    return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, content={"detail": jsonable_encoder(errors)})
+
+
 def get_session() -> Iterator[Session]:
     with SessionLocal() as session:
         yield session
 
 
 SessionDep = Annotated[Session, Depends(get_session)]
+SessionCookie = Annotated[str | None, Cookie(alias=SESSION_COOKIE)]
 
 
 def _utc_now() -> datetime:
     # UTC 기준, 초 단위로 저장한다.
     return datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0)
+
+
+def _to_user(row: UserRow) -> User:
+    return User(id=row.id, username=row.username, created_at=row.created_at.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+
+def _find_session(session: Session, token: str | None) -> SessionRow | None:
+    # 만료된 세션은 없는 것으로 본다.
+    if not token:
+        return None
+    return session.scalar(
+        select(SessionRow).where(
+            SessionRow.token_hash == hash_session_token(token), SessionRow.expires_at > _utc_now()
+        )
+    )
+
+
+def get_current_user(session: SessionDep, token: SessionCookie = None) -> UserRow:
+    found = _find_session(session, token)
+    if found is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    return session.get(UserRow, found.user_id)
+
+
+CurrentUser = Annotated[UserRow, Depends(get_current_user)]
 
 
 def _to_restaurant(row: RestaurantRow) -> Restaurant:
@@ -97,6 +152,71 @@ def _get_row(session: Session, restaurant_id: int) -> RestaurantRow:
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.post("/api/auth/signup", status_code=status.HTTP_201_CREATED)
+def signup(payload: SignupRequest, session: SessionDep) -> User:
+    # 가입만 하고 로그인은 하지 않는다(쿠키를 보내지 않음).
+    username_taken = HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already exists")
+    if session.scalar(select(UserRow.id).where(UserRow.username == payload.username)) is not None:
+        raise username_taken
+    row = UserRow(username=payload.username, password_hash=hash_password(payload.password), created_at=_utc_now())
+    session.add(row)
+    try:
+        session.commit()
+    except IntegrityError:
+        # 같은 아이디로 동시에 가입한 경우 DB의 UNIQUE 제약이 막는다.
+        session.rollback()
+        raise username_taken from None
+    return _to_user(row)
+
+
+@app.post("/api/auth/login")
+def login(payload: LoginRequest, response: Response, session: SessionDep, token: SessionCookie = None) -> User:
+    # 없는 아이디와 틀린 비밀번호를 같은 401로 응답한다(무엇이 틀렸는지 알려 주지 않는다).
+    invalid = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+    if len(payload.password) > PASSWORD_MAX_LENGTH:
+        # 가입 규칙보다 긴 비밀번호는 맞을 수 없으므로 해시 계산 없이 거절한다.
+        raise invalid
+    user = session.scalar(select(UserRow).where(UserRow.username == payload.username))
+    if user is None:
+        verify_dummy_password(payload.password)
+        raise invalid
+    if not verify_password(payload.password, user.password_hash):
+        raise invalid
+
+    # 이미 로그인한 쿠키가 있으면 그 세션은 지우고 새 세션을 만든다.
+    old = _find_session(session, token)
+    if old is not None:
+        session.delete(old)
+    new_token = new_session_token()
+    now = _utc_now()
+    session.add(
+        SessionRow(
+            token_hash=hash_session_token(new_token), user_id=user.id, created_at=now, expires_at=now + SESSION_MAX_AGE
+        )
+    )
+    session.commit()
+    response.set_cookie(
+        SESSION_COOKIE, new_token, max_age=int(SESSION_MAX_AGE.total_seconds()), **SESSION_COOKIE_OPTIONS
+    )
+    return _to_user(user)
+
+
+@app.post("/api/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(session: SessionDep, token: SessionCookie = None) -> Response:
+    # 로그인하지 않았거나 이미 로그아웃했어도 204로 응답한다.
+    if token:
+        session.execute(delete(SessionRow).where(SessionRow.token_hash == hash_session_token(token)))
+        session.commit()
+    response = Response(status_code=status.HTTP_204_NO_CONTENT)
+    response.delete_cookie(SESSION_COOKIE, **SESSION_COOKIE_OPTIONS)
+    return response
+
+
+@app.get("/api/auth/me")
+def me(user: CurrentUser) -> User:
+    return _to_user(user)
 
 
 @app.get("/api/restaurants")
