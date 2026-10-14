@@ -58,6 +58,12 @@
   - 실행 명령: 터미널 1 .venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8100 / 터미널 2 cd frontend && npm run build && npm run preview → http://127.0.0.1:4173 (개발용은 npm run dev → 5173)
   - 확인 결과(2026-10-14): README 절차대로 새 가상환경에 pip install -r requirements.txt, 새 폴더에 npm ci(package-lock.json) 성공, check_db 접속 성공, init_db는 기존 테이블 그대로. npm run lint 경고 0, npm run build 성공. README 명령 그대로(--reload 없이) API와 npm run preview 실행: 4173이 빌드 결과(dist의 index-*.js)를 제공하고 /api를 8100으로 전달. 빌드본(4173)에서 L05 21개·L06 24개·L07 25개 브라우저 확인 모두 통과(등록·목록·검색·필터·수정·삭제·먹었어요·카드 뽑기 추천). 4173·8100은 127.0.0.1에서만 수신, Task Flow(8001·localhost) 정상. 확인 후 서버 종료, 시험 데이터 삭제(restaurants 0건), dist 삭제(.gitignore 제외 대상).
   - 남은 오류: 없음. 실제 별도 서버 분리와 Nginx 등 운영 웹 서버 구성은 PLAN 범위 밖이며 README에 방법만 적었다.
+## 4장: 선호도와 패스(PRD R11~R13, 2026-10-14 추가)
+기존 데이터(사용자가 등록한 식당)는 지우지 않는다. 시험은 이름이 "zz시험"으로 시작하는 식당만 만들고 지운다.
+- [ ] L09: restaurants에 preference 열 추가(ALTER, 기존 행은 null), API에 preference 필드, 추천에 exclude_disliked·exclude_ids 조건. API-SPEC 갱신.
+  확인: init_db 재실행 시 기존 행 유지, preference 등록·수정·null로 삭제, 잘못된 값 422, 별로 제외·패스 id 제외가 추천에 반영, 기존 API 계약 유지.
+- [ ] L10: 화면에 선호도(등록·수정·목록·카드 표시), 추천의 "별로 빼기"(기본 켬), 결과 카드의 "패스" 버튼.
+  확인: 선호도 저장·표시, 별로 빼기 동작, 패스한 식당이 다시 나오지 않음, 조건 변경 시 패스 초기화, 남은 식당 없을 때 안내, 375px 가로 스크롤 없음.
 ## 실행 기준
 작업마다 실제 존재하는 파일을 확인한 뒤 실행 명령을 기록한다.
 ## 기록
