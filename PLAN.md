@@ -159,8 +159,12 @@ Task Flow(같은 컴퓨터의 다른 프로젝트) 6장과 같은 방식을 쓰�
   - 실행 명령: 없음(문서 작업). grep으로 명세 항목 확인.
   - 확인 결과(2026-10-14): 아이디 ^[a-z0-9]{4,20}$·비밀번호 8~64자·409·같은 401 메시지·다른 사용자 식당 404·Not authenticated·HttpOnly 쿠키·auth 422 input 미포함·메뉴 추천 로그인 무관이 명세에 모두 있음. 코드는 바꾸지 않았다.
   - 남은 오류: 없음. 쿠키 Secure는 HTTP 학습용이라 붙이지 않는다.
-- [ ] L24: users·sessions 테이블, restaurants.user_id(NULL 허용) 열 추가(init_db).
+- [x] L24: users·sessions 테이블, restaurants.user_id(NULL 허용) 열 추가(init_db).
   확인: init_db 재실행 시 기존 행 유지, DB 제약(아이디 규칙·중복·외래 키) 확인.
+  - 변경 파일: backend/models.py(UserRow·SessionRow, RestaurantRow.user_id NULL 허용·외래 키), backend/init_db.py(users·sessions 생성, restaurants.user_id 없으면 ALTER TABLE ADD COLUMN·인덱스·외래 키, preference 추가와 같은 방식으로 정리)
+  - 실행 명령: .venv 활성화 후 python -m backend.init_db
+  - 확인 결과(2026-10-14): 실행 전 식당 0건. 1회차 users·sessions 생성·restaurants.user_id 추가, 2회차 모두 "그대로 두었습니다". SHOW CREATE TABLE로 utf8mb4_bin 아이디·UNIQUE·CHECK, 세션 UNIQUE·외래 키, restaurants.user_id 인덱스·외래 키 확인. 트랜잭션 안에서 확인 후 ROLLBACK(16개 통과): 아이디 4·20자·소문자+숫자 허용, 중복·대문자·3자·21자·공백·한글·밑줄 거절, 세션 정상·중복·없는 사용자 거절, 식당 주인 있음·NULL 허용·없는 사용자 거절. 확인 후 users·sessions 0건(AUTO_INCREMENT 1), 식당 0건.
+  - 남은 오류: 없음. API는 아직 user_id를 쓰지 않는다(L26).
 - [ ] L25: 회원가입·로그인·로그아웃·현재 사용자 API(비밀번호 scrypt 해시, 세션 쿠키).
   확인: 정상·위반·중복, 같은 401, 쿠키 속성, 로그아웃 후 401, API 재시작 후 로그인 유지, 응답·로그에 비밀번호 없음.
 - [ ] L26: 식당 API(목록·등록·수정·삭제·방문·추천) 로그인 필수·사용자별 분리.
