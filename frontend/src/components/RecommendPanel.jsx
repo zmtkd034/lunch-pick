@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { ApiError, getErrorMessage, request } from '../api.js'
 import CardBack from './CardBack.jsx'
+import RevealName from './RevealName.jsx'
 import {
   CATEGORIES,
   CATEGORY_LABELS,
@@ -32,6 +33,8 @@ export default function RecommendPanel({ restaurants, onPicked, onVisit }) {
   // "idle" | "drawing" | "revealed" | "empty"
   const [phase, setPhase] = useState('idle')
   const [pickedId, setPickedId] = useState(null)
+  // 결과를 보여 줄 때마다 1씩 늘려 이름 강조 애니메이션을 다시 재생한다(L22).
+  const [revealCount, setRevealCount] = useState(0)
   const [error, setError] = useState('')
   // 뽑는 중에 다시 눌러도 요청이 겹치지 않게 막는다.
   const drawingRef = useRef(false)
@@ -74,6 +77,7 @@ export default function RecommendPanel({ restaurants, onPicked, onVisit }) {
       const [result] = await Promise.all([request('GET', `/api/recommendation?${params}`), shuffle])
       onPicked(result)
       setPickedId(result.id)
+      setRevealCount((count) => count + 1)
       setPhase('revealed')
     } catch (requestError) {
       await shuffle
@@ -208,7 +212,7 @@ export default function RecommendPanel({ restaurants, onPicked, onVisit }) {
               {picked && (
                 <>
                   <span className="card-label">오늘은 여기!</span>
-                  <strong className="card-name">{picked.name}</strong>
+                  <RevealName key={revealCount} name={picked.name} />
                   <div className="restaurant-meta">
                     <span className="badge">{CATEGORY_LABELS[picked.category]}</span>
                     <span className={`badge price-${picked.price_range.toLowerCase()}`}>

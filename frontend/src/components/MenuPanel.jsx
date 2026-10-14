@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { ApiError, getErrorMessage, request } from '../api.js'
 import CardBack from './CardBack.jsx'
+import RevealName from './RevealName.jsx'
 import { CATEGORIES, CATEGORY_LABELS, EXCLUDE_IDS_MAX } from '../constants.js'
 
 // 카드를 섞는 연출 시간. 식당 뽑기와 같다.
@@ -17,6 +18,8 @@ export default function MenuPanel({ restaurants }) {
   // "idle" | "drawing" | "revealed" | "empty"
   const [phase, setPhase] = useState('idle')
   const [menu, setMenu] = useState(null)
+  // 결과를 보여 줄 때마다 1씩 늘려 이름 강조 애니메이션을 다시 재생한다(L22).
+  const [revealCount, setRevealCount] = useState(0)
   const [error, setError] = useState('')
   // 이번 조건에서 패스한 메뉴 id. 화면에서만 유지하며 조건을 바꾸면 비운다.
   const [passedIds, setPassedIds] = useState([])
@@ -43,6 +46,7 @@ export default function MenuPanel({ restaurants }) {
     try {
       const [result] = await Promise.all([request('GET', `/api/menu-recommendation?${params}`), shuffle])
       setMenu(result)
+      setRevealCount((count) => count + 1)
       setPhase('revealed')
     } catch (requestError) {
       await shuffle
@@ -114,7 +118,7 @@ export default function MenuPanel({ restaurants }) {
               {menu && (
                 <>
                   <span className="card-label">오늘의 메뉴!</span>
-                  <strong className="card-name">{menu.name}</strong>
+                  <RevealName key={revealCount} name={menu.name} />
                   <div className="restaurant-meta">
                     <span className="badge">{CATEGORY_LABELS[menu.category]}</span>
                   </div>
